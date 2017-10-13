@@ -1,0 +1,20 @@
+FROM gams 
+
+# Set GAMS version
+ENV GLOBIOM_VERSION=0.0.0
+
+## Install dependencies 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+                                       p7zip p7zip-full python-setuptools python-pip
+
+RUN pip install --upgrade pip 
+
+RUN pip install xlsx2csv
+
+RUN wget -q -c --no-check-certificate https://github.com/iiasa/xlsx2gdx/archive/v1.0.zip -O /opt/gams/xlsx2gdx.zip &&\
+     cd /opt/gams &&\
+     7z e xlsx2gdx.zip -oxlsx2gdx &&\
+     export PATH=$PATH:$(dirname $(find / -name gams -type f -executable -print)) &&\
+     ./xlsx2gdx/install.sh &&\ 
+     rm -rf ./xlsx2gdx xlsx2gdx.zip
+
