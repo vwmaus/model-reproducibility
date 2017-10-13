@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-MAINTAINER Victor Maus <maus@iiasa.ac.at>
 
 # Set GAMS version
 ENV GAMS_VERSION=24.8.3

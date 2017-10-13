@@ -1,20 +1,16 @@
-FROM gams 
+FROM gams:24.8.3-x64_64
 
-# Set GAMS version
-ENV GLOBIOM_VERSION=0.0.0
+# Set model 
+ENV MODEL=transport-model
 
-## Install dependencies 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-                                       p7zip p7zip-full python-setuptools python-pip
+# Set model version
+ENV MODEL_VERSION=0.0.0
 
-RUN pip install --upgrade pip 
+RUN wget -q -c --no-check-certificate https://github.com/vwmaus/${MODEL}/releases/v${MODEL_VERSION}.zip -O /workspace/model.zip &&\
+     cd /worspace &&\
+     7z e /workspace/model.zip 
 
-RUN pip install xlsx2csv
+# Run model 
+RUN gams ${MODEL}-v${MODEL_VERSION}/main.gms 
 
-RUN wget -q -c --no-check-certificate https://github.com/iiasa/xlsx2gdx/archive/v1.0.zip -O /opt/gams/xlsx2gdx.zip &&\
-     cd /opt/gams &&\
-     7z e xlsx2gdx.zip -oxlsx2gdx &&\
-     export PATH=$PATH:$(dirname $(find / -name gams -type f -executable -print)) &&\
-     ./xlsx2gdx/install.sh &&\ 
-     rm -rf ./xlsx2gdx xlsx2gdx.zip
 
