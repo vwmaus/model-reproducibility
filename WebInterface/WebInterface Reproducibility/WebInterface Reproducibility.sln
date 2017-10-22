@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebInterface Reproducibility", "WebInterface Reproducibility\WebInterface Reproducibility.csproj", "{FF2A3C8E-D108-4CC7-A22B-A408C694540C}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{A7D78119-218F-467C-B627-B7509E2016BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FF2A3C8E-D108-4CC7-A22B-A408C694540C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF2A3C8E-D108-4CC7-A22B-A408C694540C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF2A3C8E-D108-4CC7-A22B-A408C694540C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7D78119-218F-467C-B627-B7509E2016BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7D78119-218F-467C-B627-B7509E2016BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7D78119-218F-467C-B627-B7509E2016BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7D78119-218F-467C-B627-B7509E2016BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

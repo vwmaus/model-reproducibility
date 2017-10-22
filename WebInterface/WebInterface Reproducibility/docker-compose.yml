@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  webinterfacereproducibility:
+    image: webinterfacereproducibility
+    build:
+      context: .\WebInterface Reproducibility
+      dockerfile: Dockerfile
