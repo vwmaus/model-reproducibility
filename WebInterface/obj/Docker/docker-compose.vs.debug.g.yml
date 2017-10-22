@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  webinterface:
+    image: webinterface:dev
+    build:
+      args:
+        source: obj/Docker/empty/
+    environment:
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+      #- NUGET_FALLBACK_PACKAGES=$container_paths_to_fallback_packages_webinterface$
+    volumes:
+      - D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface:/app
+      - C:\Users\peter\vsdbg:/remote_debugger:ro
+      #- $nuget_user_folder_webinterface$:/root/.nuget/packages:ro
+#$nuget_fallback_packages_volume_mapping_webinterface$
+    entrypoint: tail -f /dev/null
+    labels:
+      com.microsoft.visualstudio.debuggee.program: "dotnet"
+      #com.microsoft.visualstudio.debuggee.arguments: " $debuggee_arguments_probing_paths_webinterface$ bin/Debug/netcoreapp2.0/WebInterface.dll"
+      com.microsoft.visualstudio.debuggee.workingdirectory: "/app"
+      com.microsoft.visualstudio.debuggee.killprogram: "/bin/bash -c \"if PID=$$(pidof -x dotnet); then kill $$PID; fi\""

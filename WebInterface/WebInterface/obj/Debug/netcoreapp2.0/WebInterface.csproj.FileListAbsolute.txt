@@ -1,0 +1,11 @@
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.deps.json
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.runtimeconfig.json
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.runtimeconfig.dev.json
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.dll
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.pdb
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.csprojResolveAssemblyReference.cache
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.csproj.CoreCompileInputs.cache
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.AssemblyInfoInputs.cache
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.AssemblyInfo.cs
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.dll
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.pdb
