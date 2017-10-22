@@ -7,17 +7,6 @@
     <br/>
 
     <form>
-        @*<div class="form-group">
-            <label for="exampleInputEmail1">Email address</label>
-            <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
-            <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
-        </div>*@
-
-        @*<div class="form-group">
-            <label for="exampleInputPassword1">Password</label>
-            <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">
-        </div>*@
-
         <div class="form-group">
             <label for="program">Program</label>
             <select class="form-control" id="program">
@@ -36,6 +25,16 @@
             </select>
         </div>
         
+        <div class="form-group">
+            <label for="githubUser">GitHub User ID</label>
+            <input type="text" class="form-control" id="githubUser" rows="1" value="vwmaus"/>
+        </div>
+        
+        <div class="form-group">
+            <label for="githubRepo">GitHub Repository</label>
+            <input type="text" class="form-control" id="githubRepo" rows="1" value="transport-model"/>
+        </div>
+
         <div class="form-group">
             <label for="model">Model / Script</label>
             <select class="form-control" id="model">
@@ -56,67 +55,31 @@
             </select>
         </div>
 
-        @*<div class="form-group">
-            <label for="exampleSelect2">Example multiple select</label>
-            <select multiple class="form-control" id="exampleSelect2">
-                <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5</option>
-            </select>
-        </div>*@
-        @*<div class="form-group">
-            <label for="exampleTextarea">Example textarea</label>
-            <textarea class="form-control" id="exampleTextarea" rows="3"></textarea>
-        </div>*@
-
         <div class="form-group">
-            <label for="exampleInputFile">Licence Path</label>
+            <label for="licencePath">Licence Path</label>
             <input type="file" class="form-control-file" id="inputFile" aria-describedby="fileHelp">
             <small id="fileHelp" class="form-text text-muted">Select the path of your program licence in case the executing program requires a licence.</small>
         </div>
-
-        @*<fieldset class="form-group">
-            <legend>Radio buttons</legend>
-            <div class="form-check">
-                <label class="form-check-label">
-                    <input type="radio" class="form-check-input" name="optionsRadios" id="optionsRadios1" value="option1" checked>
-                    Option one is this and that&mdash;be sure to include why it's great
-                </label>
-            </div>
-            <div class="form-check">
-                <label class="form-check-label">
-                    <input type="radio" class="form-check-input" name="optionsRadios" id="optionsRadios2" value="option2">
-                    Option two can be something else and selecting it will deselect option one
-                </label>
-            </div>
-            <div class="form-check disabled">
-                <label class="form-check-label">
-                    <input type="radio" class="form-check-input" name="optionsRadios" id="optionsRadios3" value="option3" disabled>
-                    Option three is disabled
-                </label>
-            </div>
-        </fieldset>*@
 
         <div class="form-check">
             <label for="outputSettings">Output Settings</label>
             <div>
                 <label class="form-check-label">
                     <input type="checkbox" class="form-check-input">
-                    Save to IIASA database
+                    Save result to IIASA database
                 </label>
             </div>
 
             <div>
                 <label class="form-check-label">
                     <input type="checkbox" class="form-check-input">
-                    Download file
+                    Download result
                 </label>  
             </div>
 
         </div>
         <br/>
-        <button type="submit" class="btn btn-primary">Run Script</button>
+        <button id="btn_runScript" type="submit" class="btn btn-primary" onclick="runScript()">Run Script</button>
+        <button id="btn_downloadDockerfile" type="submit" class="btn btn-default" onclick="downloadDockerfiles()">Download Dockerfiles</button>
     </form>
 </div>
