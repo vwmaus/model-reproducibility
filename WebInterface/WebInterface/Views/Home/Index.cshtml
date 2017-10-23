@@ -30,31 +30,31 @@
             <input type="text" class="form-control" id="githubUser" rows="1" value="vwmaus"/>
         </div>
         
-        <div class="form-group">
+        @*<div class="form-group">
             <label for="githubRepo">GitHub Repository</label>
             <input type="text" class="form-control" id="githubRepo" rows="1" value="transport-model"/>
-        </div>
+        </div>*@
 
         <div class="form-group">
             <label for="model">Model / Script</label>
             <select class="form-control" id="model">
-                <option>Model 1</option>
+                @*<option>Model 1</option>
                 <option>Model 2</option>
                 <option>Model 3</option>
                 <option>Model 4</option>
-                <option>Model 5</option>
+                <option>Model 5</option>*@
             </select>
         </div>
         
         <div class="form-group">
             <label for="modelversion">Model-Version</label>
             <select class="form-control" id="modelversion">
-                <option>1.0 - 20.04.2017</option>
+                @*<option>1.0 - 20.04.2017</option>
                 <option>2.0 - 30.04.2017</option>
-                <option>3.0 - 20.02.2017</option>
+                <option>3.0 - 20.02.2017</option>*@
             </select>
         </div>
-
+        
         <div class="form-group">
             <label for="licencePath">Licence Path</label>
             <input type="file" class="form-control-file" id="inputFile" aria-describedby="fileHelp">
@@ -80,6 +80,7 @@
         </div>
         <br/>
         <button id="btn_runScript" type="submit" class="btn btn-primary" onclick="runScript()">Run Script</button>
+
         <button id="btn_downloadDockerfile" type="submit" class="btn btn-default" onclick="downloadDockerfiles()">Download Dockerfiles</button>
     </form>
 </div>
