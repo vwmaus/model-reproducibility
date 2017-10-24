@@ -1,4 +1,7 @@
-﻿// Write your JavaScript code.
+﻿/////////////////////////////////////////////////////////////////////////////////////////////
+// Functions
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 function runScript() {
     window.alert("runScript");
 }
@@ -37,7 +40,7 @@ function getGithubVersions(owner, repo) {
         xmlHttp.onreadystatechange = function () {
             if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
                 callback(xmlHttp.responseText);
-        }
+        };
         xmlHttp.open("GET", theUrl, true); // true for asynchronous 
         xmlHttp.send(null);
     }
@@ -53,21 +56,18 @@ function getGithubVersions(owner, repo) {
     var obj = JSON.parse(res);
     var tags = new Array();
 
-    obj.forEach(function (entry) {
-        var tag = entry.ref.replace("refs/tags/", "");
-        console.log(tag);
-        tags.push(tag);
-    });
+    if (Object.prototype.toString.call(obj) === "[object Array]") {
+        obj.forEach(function(entry) {
+            var tag = entry.ref.replace("refs/tags/", "");
+            console.log(tag);
+            tags.push(tag);
+        });
+    }
 
-    var sel = $("#modelversion");
-
-    $(sel)
-        .find("option")
-        .remove()
-        .end();
+    DeleteModelVersionData();
 
     $.each(tags, function (val, text) {
-        sel.append(
+        $("#modelversion").append(
             $("<option></option>").val(val).html(text)
         );
     });
@@ -85,7 +85,8 @@ function getGithubRepos(owner) {
         xmlHttp.onreadystatechange = function () {
             if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
                 callback(xmlHttp.responseText);
-        }
+        };
+
         xmlHttp.open("GET", theUrl, true); // true for asynchronous 
         xmlHttp.send(null);
     }
@@ -101,13 +102,13 @@ function getGithubRepos(owner) {
     var obj = JSON.parse(res);
     var tags = new Array();
 
-    //console.log(obj);
-
-    obj.forEach(function (entry) {
-        var tag = entry.name;
-        console.log(tag);
-        tags.push(tag);
-    });
+    if (Object.prototype.toString.call(obj) === "[object Array]") {
+        obj.forEach(function(entry) {
+            var tag = entry.name;
+            console.log(tag);
+            tags.push(tag);
+        });
+    }
 
     var sel = $("#model");
 
@@ -124,18 +125,41 @@ function getGithubRepos(owner) {
 }
 
 function ReloadFormData() {
-    if ($("#modelversion").length) {
+    if ($("#githubUser").length) {
         var owner = $("#githubUser").val();
-        var repo = $("#model option:selected").text();
 
         getGithubRepos(owner);
-        getGithubVersions(owner, repo);
+
+        if ($("#modelversion").length) {
+
+            var repo = $("#model option:selected").text();
+
+            getGithubVersions(owner, repo);
+        }
     }
 }
 
-window.onload = function() {
-
+function DeleteModelData() {
+    $("#model")
+        .find("option")
+        .remove()
+        .end();
 }
+
+function DeleteModelVersionData() {
+    $("#modelversion")
+        .find("option")
+        .remove()
+        .end();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+// DOM 
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+$(document).ready(function () {
+    ReloadFormData();
+});
 
 $("#model").change(function () {
     var repo = $("#model option:selected").text();
@@ -150,5 +174,10 @@ $("#model").change(function () {
 });
 
 $("#githubUser").change(function () {
+    DeleteModelData();
+    DeleteModelVersionData();
     ReloadFormData();
 });
+
+$("#btn_runScript").click(runScript);
+$("#btn_downloadDockerfile").click(downloadDockerfiles);
