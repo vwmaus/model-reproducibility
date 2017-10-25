@@ -6,17 +6,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using WebInterface.Classes;
 using WebInterface.Models;
 
 namespace WebInterface.Services
 {
     public class HomeControllerService
     {
-        public string GamsDockerFilePath { get; set; }
+        public string GamsDockerfilePath { get; set; }
+
+        public string ModelDockerfilePath { get; set; }
 
         public void CreateGamsDockerfile(string licencePath = null, string outputFolder = "")
         {
-            Debug.WriteLine("CreateGamsDockerfile");
+            Debug.WriteLine("Create Gams Dockerfile");
+
+            const string licencePlaceholder = "$GAMS_LICENSE";
 
             string dockerfileContent;
 
@@ -35,7 +40,7 @@ namespace WebInterface.Services
             {
                 licencePath = licencePath.Replace(@"\", "/");
 
-                dockerfileContent = dockerfileContent.Replace("$GAMS_LICENSE", licencePath);
+                dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
             }
 
             try
@@ -55,7 +60,7 @@ namespace WebInterface.Services
 
                 File.WriteAllText(outputfile, dockerfileContent);
 
-                this.GamsDockerFilePath = outputfile;
+                this.GamsDockerfilePath = outputfile;
             }
             catch (Exception ex)
             {
@@ -64,9 +69,69 @@ namespace WebInterface.Services
             }
         }
 
-        public string CreateDockerfile(DockerfileDataModel dockerfileDataModel)
+        public void CreateModelDockerfile(DockerfileDataModel dockerfileDataModel, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
         {
-            return string.Empty;
+            Debug.WriteLine("Create Model Dockerfile");
+
+            const string modelPlaceholder = "${MODEL}";
+            const string modelversionPlaceholder = "${MODEL_VERSION}";
+
+            string dockerfileContent;
+
+            var dockerTemplate = $@"./Docker-Templates/{templateFileName}";
+
+            using (var reader = new StreamReader(dockerTemplate))
+            {
+                dockerfileContent = reader.ReadToEnd();
+            }
+
+            if (dockerfileDataModel.ModelVersion.IsNullOrEmpty())
+            {
+                throw new Exception("Version must not be null or empty!");
+            }
+
+            if (dockerfileDataModel.Model.IsNullOrEmpty())
+            {
+                throw new Exception("Model must not be null or empty!");
+            }
+
+            dockerfileContent = dockerfileContent
+                .Replace(modelversionPlaceholder, dockerfileDataModel.ModelVersion)
+                .Replace(modelPlaceholder, dockerfileDataModel.Model);
+
+            try
+            {
+                if (string.IsNullOrEmpty(outputFolder))
+                {
+                    outputFolder = @"./Output/";
+                }
+
+                if (!Directory.Exists(outputFolder))
+                {
+                    Directory.CreateDirectory(outputFolder);
+                }
+
+                var outputfile = Path.Combine(outputFolder, templateFileName);
+                File.CreateText(outputfile);
+
+                File.WriteAllText(outputfile, dockerfileContent);
+
+                this.GamsDockerfilePath = outputfile;
+            }
+            catch (Exception ex)
+            {
+                //Debug.WriteLine(ex.Message);
+                throw;
+            }
+        }
+
+        public void CreateModelDockerfile(string model, string modelversion, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
+        {
+            CreateModelDockerfile(new DockerfileDataModel
+            {
+                Model = model,
+                ModelVersion = modelversion
+            });
         }
     }
 }

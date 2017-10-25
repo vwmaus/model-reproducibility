@@ -47,10 +47,6 @@ function httpPost(theUrl) {
 }
 
 function getGithubVersions(owner, repo) {
-    // https://stackoverflow.com/questions/247483/http-get-request-in-javascript
-    // "https://api.github.com/repos/ptrkrnstnr/transport-model/git/refs/tags"
-    // https://developer.github.com/v3/git/tags/#get-a-tag
-
     var url = "https://api.github.com/repos/" + owner + "/" + repo + "/git/refs/tags";
 
     function httpGetAsync(theUrl, callback) {
@@ -181,16 +177,17 @@ $(document).ready(function () {
     $("#link_dl_dockerfile").click(function () {
 
         var lic = $("#licencePath").val();
+
+        alert(typeof(lic) + " " + lic);
+
             $.ajax({
                 url: this.href,
                 type: "POST",
-                data: {
-                    licence: lic
-                }
+                data: { licence: lic }
+        })
+        .done(function (data) {
+            alert(data);
         });
-        //.done(function (data) {
-        //    alert(data);
-        //});
 
         //return false;
     }
