@@ -1,7 +1,7 @@
 FROM gams:24.8.3-x64_64
 
 # Set model 
-ENV MODEL=transport-model
+ENV MODEL=${MODEL}
 
 # Set model version
 ENV MODEL_VERSION=0.0.0

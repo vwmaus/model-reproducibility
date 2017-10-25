@@ -37,10 +37,11 @@ namespace WebInterface.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult DownloadDockerfile(string licence)
+        public IActionResult DownloadDockerfile(string licence) //, string model, string modelversion)
         {
             var hs = new HomeControllerService();
             hs.CreateGamsDockerfile(licence);
+            //hs.CreateModelDockerfile(model, modelversion);
 
             return RedirectToAction("DownloadGamsDockerfile");
         }
