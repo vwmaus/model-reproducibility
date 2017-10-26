@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Output\" />
+    <Folder Include="Output\ZipTemp\" />
   </ItemGroup>
 
 </Project>

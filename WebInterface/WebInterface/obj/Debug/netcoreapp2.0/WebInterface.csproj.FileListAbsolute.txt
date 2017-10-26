@@ -9,3 +9,14 @@ D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netc
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.AssemblyInfo.cs
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.dll
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.pdb
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.deps.json
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.runtimeconfig.json
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.runtimeconfig.dev.json
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.dll
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\bin\Debug\netcoreapp2.0\WebInterface.pdb
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.csprojResolveAssemblyReference.cache
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.csproj.CoreCompileInputs.cache
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.AssemblyInfoInputs.cache
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.AssemblyInfo.cs
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.dll
+C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\WebInterface\obj\Debug\netcoreapp2.0\WebInterface.pdb

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -69,7 +70,7 @@ namespace WebInterface.Services
             }
         }
 
-        public void CreateModelDockerfile(DockerfileDataModel dockerfileDataModel, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
+        public void CreateModelDockerfile(UserConfiguration userConfiguration, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
         {
             Debug.WriteLine("Create Model Dockerfile");
 
@@ -85,19 +86,19 @@ namespace WebInterface.Services
                 dockerfileContent = reader.ReadToEnd();
             }
 
-            if (dockerfileDataModel.ModelVersion.IsNullOrEmpty())
+            if (userConfiguration.ModelVersion.IsNullOrEmpty())
             {
                 throw new Exception("Version must not be null or empty!");
             }
 
-            if (dockerfileDataModel.Model.IsNullOrEmpty())
+            if (userConfiguration.Model.IsNullOrEmpty())
             {
                 throw new Exception("Model must not be null or empty!");
             }
 
             dockerfileContent = dockerfileContent
-                .Replace(modelversionPlaceholder, dockerfileDataModel.ModelVersion)
-                .Replace(modelPlaceholder, dockerfileDataModel.Model);
+                .Replace(modelversionPlaceholder, userConfiguration.ModelVersion)
+                .Replace(modelPlaceholder, userConfiguration.Model);
 
             try
             {
@@ -127,7 +128,7 @@ namespace WebInterface.Services
 
         public void CreateModelDockerfile(string model, string modelversion, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
         {
-            CreateModelDockerfile(new DockerfileDataModel
+            CreateModelDockerfile(new UserConfiguration
             {
                 Model = model,
                 ModelVersion = modelversion
