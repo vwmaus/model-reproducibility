@@ -12,7 +12,7 @@ using WebInterface.Models;
 
 namespace WebInterface.Services
 {
-    public class HomeControllerService
+    public class HomeControllerService : ControllerBase
     {
         public string GamsDockerfilePath { get; set; }
 
@@ -44,30 +44,22 @@ namespace WebInterface.Services
                 dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
             }
 
-            try
+            if (string.IsNullOrEmpty(outputFolder))
             {
-                if (string.IsNullOrEmpty(outputFolder))
-                {
-                    outputFolder = @"./Output/";
-                }
-
-                if (!Directory.Exists(outputFolder))
-                {
-                    Directory.CreateDirectory(outputFolder);
-                }
-
-                var outputfile = Path.Combine(outputFolder, "gams-dockerfile");
-                File.CreateText(outputfile);
-
-                File.WriteAllText(outputfile, dockerfileContent);
-
-                this.GamsDockerfilePath = outputfile;
+                outputFolder = @"./Output/";
             }
-            catch (Exception ex)
+
+            if (!Directory.Exists(outputFolder))
             {
-                //Debug.WriteLine(ex.Message);
-                throw;
+                Directory.CreateDirectory(outputFolder);
             }
+
+            var outputfile = Path.Combine(outputFolder, "gams-dockerfile");
+            System.IO.File.CreateText(outputfile);
+
+            System.IO.File.WriteAllText(outputfile, dockerfileContent);
+
+            this.GamsDockerfilePath = outputfile;
         }
 
         public void CreateModelDockerfile(UserConfiguration userConfiguration, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
@@ -100,39 +92,47 @@ namespace WebInterface.Services
                 .Replace(modelversionPlaceholder, userConfiguration.ModelVersion)
                 .Replace(modelPlaceholder, userConfiguration.Model);
 
-            try
+            if (string.IsNullOrEmpty(outputFolder))
             {
-                if (string.IsNullOrEmpty(outputFolder))
-                {
-                    outputFolder = @"./Output/";
-                }
-
-                if (!Directory.Exists(outputFolder))
-                {
-                    Directory.CreateDirectory(outputFolder);
-                }
-
-                var outputfile = Path.Combine(outputFolder, templateFileName);
-                File.CreateText(outputfile);
-
-                File.WriteAllText(outputfile, dockerfileContent);
-
-                this.GamsDockerfilePath = outputfile;
+                outputFolder = @"./Output/";
             }
-            catch (Exception ex)
+
+            if (!Directory.Exists(outputFolder))
             {
-                //Debug.WriteLine(ex.Message);
-                throw;
+                Directory.CreateDirectory(outputFolder);
             }
+
+            var outputfile = Path.Combine(outputFolder, templateFileName);
+            System.IO.File.CreateText(outputfile);
+
+            System.IO.File.WriteAllText(outputfile, dockerfileContent);
+
+            this.GamsDockerfilePath = outputfile;
         }
 
-        public void CreateModelDockerfile(string model, string modelversion, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
+        public string CreateDockerZipFile()
         {
-            CreateModelDockerfile(new UserConfiguration
+            const string filename = "dockerfiles.zip";
+            string outputfile = $@"./OutputZip/{filename}";
+            const string inputPath = "./Output/";
+
+            if (System.IO.File.Exists(outputfile))
             {
-                Model = model,
-                ModelVersion = modelversion
-            });
+                System.IO.File.Delete(outputfile);
+            }
+
+            ZipFile.CreateFromDirectory(inputPath, outputfile);
+
+            return outputfile;
+        }
+
+        public IActionResult DownloadFile(string filepath, string downloadFilename)
+        {
+            // https://stackoverflow.com/questions/317315/asp-net-mvc-relative-paths
+            //https://stackoverflow.com/questions/35237863/download-file-using-mvc-core
+
+            byte[] fileBytes = System.IO.File.ReadAllBytes(filepath);
+            return File(fileBytes, "application/x-msdownload", downloadFilename);
         }
     }
 }
