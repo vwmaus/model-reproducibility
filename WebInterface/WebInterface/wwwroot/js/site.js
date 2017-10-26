@@ -82,7 +82,7 @@ function getGithubVersions(owner, repo) {
 
     $.each(tags, function (val, text) {
         $("#modelversion").append(
-            $("<option></option>").val(val).html(text)
+            $("<option></option>").val(text).html(text)
         );
     });
 }
@@ -133,7 +133,7 @@ function getGithubRepos(owner) {
 
     $.each(tags, function (val, text) {
         sel.append(
-            $("<option></option>").val(val).html(text)
+            $("<option></option>").val(text).html(text)
         );
     });
 }
@@ -174,24 +174,8 @@ function DeleteModelVersionData() {
 $(document).ready(function () {
     $("#btn_runScript").click(runScript);
 
-    $("#link_dl_dockerfile").click(function () {
-
-        var lic = $("#licencePath").val();
-
-        alert(typeof(lic) + " " + lic);
-
-            $.ajax({
-                url: this.href,
-                type: "POST",
-                data: { licence: lic }
-        })
-        .done(function (data) {
-            alert(data);
-        });
-
-        //return false;
-    }
-    );
+    $("#githubUser").val("vwmaus");
+    $("#licensePath").val("");
 
     $("#model").change(function () {
         var repo = $("#model option:selected").text();
