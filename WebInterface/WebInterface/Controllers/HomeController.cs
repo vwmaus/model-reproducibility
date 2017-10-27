@@ -40,13 +40,8 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        public IActionResult DownloadDockerfiles(UserConfiguration config) //, string model, string modelversion)
+        public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
-            if (!ModelState.IsValid)
-            {
-                return View("Index");
-            }
-
             var hs = new HomeControllerService();
             hs.CreateGamsDockerfile(config.LicencePath);
             hs.CreateModelDockerfile(config);
@@ -59,9 +54,37 @@ namespace WebInterface.Controllers
         [HttpPost]
         public IActionResult RunScript(UserConfiguration config)
         {
-            if (ModelState.IsValid)
+            // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
+
+            if (!ModelState.IsValid)
             {
+                return View("Index");
             }
+
+            var hs = new HomeControllerService();
+            hs.CreateGamsDockerfile(config.LicencePath);
+            hs.CreateModelDockerfile(config);
+
+            // docker compose yml
+
+            // build docker image of program from dockerfile
+            var programDockerfile = "./Output/gams-dockerfile";
+
+            var fullpath = Path.GetFullPath(programDockerfile);
+
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.FileName = "/bin/bash";
+            startInfo.Arguments = $@"docker build -f {fullpath} .";
+            startInfo.RedirectStandardOutput = true;
+            process.StartInfo = startInfo;
+            process.Start(); // no such file or directory
+
+            Debug.WriteLine(process.StandardOutput.ReadToEnd());
+
+            // build docker image of model
+
 
             return View("Index");
         }
