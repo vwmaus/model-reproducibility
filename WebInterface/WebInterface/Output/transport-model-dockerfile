@@ -6,7 +6,7 @@ ENV MODEL=transport-model
 # Set model version
 ENV MODEL_VERSION=0.0.0
 
-RUN wget -q -c --no-check-certificate https://github.com/vwmaus/transport-model/releases/vv1.0.zip -O /workspace/model.zip &&\
+RUN wget -q -c --no-check-certificate https://github.com/vwmaus/transport-model/releases/v1.0.zip -O /workspace/model.zip &&\
      cd /worspace &&\
      7z e /workspace/model.zip 
 
