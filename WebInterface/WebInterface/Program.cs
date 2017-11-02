@@ -7,6 +7,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using WebInterface.Models;
+using WebInterface.Services;
 
 namespace WebInterface
 {
@@ -14,6 +16,9 @@ namespace WebInterface
     {
         public static void Main(string[] args)
         {
+            //HomeControllerService s = new HomeControllerService();
+            //s.CreateGamsDockerfile(@"C:\Temp\gamslic.txt");
+
             BuildWebHost(args).Run();
         }
 

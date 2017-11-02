@@ -4,14 +4,32 @@
 
 function runScript() {
     window.alert("runScript");
+    return false;
 }
 
 function downloadDockerfiles() {
-    window.alert("downloadDockerfiles");
+    createDockerfiles();
+    return false;
 }
 
 function createDockerfiles() {
     window.alert("createDockerfiles");
+}
+
+function createGamsDockerfile() {
+    var lic = $("#licencePath").val();
+
+    $.ajax({
+        url: $("#btn_downloadDockerfile").attr("href"),
+        type: "POST",
+        data: {
+            licencePath: lic
+        }
+    }).done(function () {
+        alert("Dockerfile created");
+    });
+
+    return false;
 }
 
 function httpGet(theUrl) {
@@ -29,10 +47,6 @@ function httpPost(theUrl) {
 }
 
 function getGithubVersions(owner, repo) {
-    // https://stackoverflow.com/questions/247483/http-get-request-in-javascript
-    // "https://api.github.com/repos/ptrkrnstnr/transport-model/git/refs/tags"
-    // https://developer.github.com/v3/git/tags/#get-a-tag
-
     var url = "https://api.github.com/repos/" + owner + "/" + repo + "/git/refs/tags";
 
     function httpGetAsync(theUrl, callback) {
@@ -57,7 +71,7 @@ function getGithubVersions(owner, repo) {
     var tags = new Array();
 
     if (Object.prototype.toString.call(obj) === "[object Array]") {
-        obj.forEach(function(entry) {
+        obj.forEach(function (entry) {
             var tag = entry.ref.replace("refs/tags/", "");
             console.log(tag);
             tags.push(tag);
@@ -68,7 +82,7 @@ function getGithubVersions(owner, repo) {
 
     $.each(tags, function (val, text) {
         $("#modelversion").append(
-            $("<option></option>").val(val).html(text)
+            $("<option></option>").val(text).html(text)
         );
     });
 }
@@ -103,7 +117,7 @@ function getGithubRepos(owner) {
     var tags = new Array();
 
     if (Object.prototype.toString.call(obj) === "[object Array]") {
-        obj.forEach(function(entry) {
+        obj.forEach(function (entry) {
             var tag = entry.name;
             console.log(tag);
             tags.push(tag);
@@ -119,7 +133,7 @@ function getGithubRepos(owner) {
 
     $.each(tags, function (val, text) {
         sel.append(
-            $("<option></option>").val(val).html(text)
+            $("<option></option>").val(text).html(text)
         );
     });
 }
@@ -158,26 +172,29 @@ function DeleteModelVersionData() {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function () {
+    $("#btn_runScript").click(runScript);
+
+    $("#githubUser").val("vwmaus");
+    $("#licensePath").val("");
+
+    $("#model").change(function () {
+        var repo = $("#model option:selected").text();
+        var owner = $("#githubUser").val();
+
+        $("#modelversion")
+            .find("option")
+            .remove()
+            .end();
+
+        getGithubVersions(owner, repo);
+    });
+
+    $("#githubUser").change(function () {
+        DeleteModelData();
+        DeleteModelVersionData();
+        ReloadFormData();
+    });
+
     ReloadFormData();
 });
-
-$("#model").change(function () {
-    var repo = $("#model option:selected").text();
-    var owner = $("#githubUser").val();
-
-    $("#modelversion")
-        .find("option")
-        .remove()
-        .end();
-
-    getGithubVersions(owner, repo);
-});
-
-$("#githubUser").change(function () {
-    DeleteModelData();
-    DeleteModelVersionData();
-    ReloadFormData();
-});
-
-$("#btn_runScript").click(runScript);
-$("#btn_downloadDockerfile").click(downloadDockerfiles);
+/////////////////////////////////////////////////////////////////////////////////////////////
