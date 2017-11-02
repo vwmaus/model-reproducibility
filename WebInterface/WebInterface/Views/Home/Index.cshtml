@@ -1,85 +1,103 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    ViewBag.Title = "Reproducibility Web-Interface";
 }
+
+@model WebInterface.Models.UserConfiguration
+
 
 <div>
     <h1>IRT - IIASA Reproducibility Tool</h1>
-    <br/>
+    <br />
 
-    <form>
-        <div class="form-group">
-            <label for="program">Program</label>
-            <select class="form-control" id="program">
-                <option>Gams</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="programVersion">Program Version</label>
-            <select class="form-control" id="programVersion">
-                <option>1.0</option>
-                <option>1.1</option>
-                <option>1.2</option>
-                <option>2.0</option>
-                <option>2.1</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="githubUser">GitHub User ID</label>
-            <input type="text" class="form-control" id="githubUser" rows="1" value="vwmaus"/>
-        </div>
-        
-        @*<div class="form-group">
-            <label for="githubRepo">GitHub Repository</label>
-            <input type="text" class="form-control" id="githubRepo" rows="1" value="transport-model"/>
-        </div>*@
+    @{
+        Html.BeginForm(new { @class = "form-horizontal", role = "form", method="post"});
+
+
 
         <div class="form-group">
-            <label for="model">Model / Script</label>
-            <select class="form-control" id="model">
-                @*<option>Model 1</option>
-                <option>Model 2</option>
-                <option>Model 3</option>
-                <option>Model 4</option>
-                <option>Model 5</option>*@
-            </select>
+            @Html.LabelFor(m => m.Program, "Program")
+            @Html.ValidationMessageFor(m => m.Program)
+            @Html.DropDownListFor(m => m.Program,
+                new List<SelectListItem>
+                {
+                    new SelectListItem{ Text="Gams", Value = "Gams" }
+                },
+                new { @class = "form-control", @id = "program" })
         </div>
-        
+
         <div class="form-group">
-            <label for="modelversion">Model-Version</label>
-            <select class="form-control" id="modelversion">
-                @*<option>1.0 - 20.04.2017</option>
-                <option>2.0 - 30.04.2017</option>
-                <option>3.0 - 20.02.2017</option>*@
-            </select>
+            @Html.LabelFor(m => m.ProgramVersion, "Program Version")
+            @Html.ValidationMessageFor(m => m.ProgramVersion)
+            @Html.DropDownListFor(m => m.ProgramVersion,
+                new List<SelectListItem>
+                {
+                    new SelectListItem{ Text="1.0", Value = "1.0" },
+                    new SelectListItem{ Text="2.0", Value = "2.0" },
+                    new SelectListItem{ Text="3.0", Value = "3.0" }
+                },
+                new { @class = "form-control", @id = "programVersion" })
         </div>
-        
+
         <div class="form-group">
-            <label for="licencePath">Licence Path</label>
-            <input type="file" class="form-control-file" id="inputFile" aria-describedby="fileHelp">
-            <small id="fileHelp" class="form-text text-muted">Select the path of your program licence in case the executing program requires a licence.</small>
+            @Html.LabelFor(m => m.GitHubUser, "GitHub User ID")
+            @Html.ValidationMessageFor(m => m.GitHubUser)
+            @Html.TextBoxFor(m => m.GitHubUser, new { @class = "form-control", @id = "githubUser", @Value = "vwmaus", @type = "text" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.Model, "Model / Script")
+            @Html.ValidationMessageFor(m => m.Model)
+            @Html.DropDownListFor(m => m.Model,
+                new List<SelectListItem>
+                {
+                    //new SelectListItem{ Text="transport-model", Value = "1" }
+                },
+                new { @class = "form-control", @id = "model" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.ModelVersion, "Model Version")
+            @Html.ValidationMessageFor(m => m.ModelVersion)
+            @Html.DropDownListFor(m => m.ModelVersion,
+                new List<SelectListItem>
+                {
+                    //new SelectListItem{ Text="1.0", Value = "1" }
+                },
+                new { @class = "form-control", @id = "modelversion" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.LicencePath, "Licence Path")
+            @Html.ValidationMessageFor(m => m.LicencePath)
+            @Html.TextBoxFor(m => m.LicencePath, new { @class = "form-control", @id = "licencePath", @rows = "1", @value = "", @type = "text" })
+            <small id="fileHelp" class="form-text text-muted">Type the path of your program licence in case the executing program requires a licence.</small>
         </div>
 
         <div class="form-check">
-            <label for="outputSettings">Output Settings</label>
+
             <div>
-                <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input">
-                    Save result to IIASA database
-                </label>
+                @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
+                @Html.LabelFor(m => m.SaveToDatabase, "Save result to IIASA database")
             </div>
 
             <div>
-                <label class="form-check-label">
-                    <input type="checkbox" class="form-check-input">
-                    Download result
-                </label>  
+                @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
+                @Html.LabelFor(m => m.DownloadResult, "Download Result")
             </div>
-
         </div>
-        <br/>
-        <button id="btn_runScript" type="submit" class="btn btn-primary">Run Script</button>
-        <button id="btn_downloadDockerfile" type="submit" class="btn btn-default">Download Dockerfiles</button>
-    </form>
+
+        <br />
+
+        <div class="form-group">
+                <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
+        </div>
+
+        <div class="form-group">
+                <input type="submit" value="Run Script" class="btn btn-default" asp-action="RunScript" asp-controller="Home"/>
+        </div>
+
+
+        Html.EndForm();
+    }
 </div>
