@@ -20,4 +20,8 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="copy /Y &quot;$(SolutionDir)Docker-Templates&quot; &quot;$(SolutionDir)\WebInterface\Docker-Templates\&quot;" />
+  </Target>
+
 </Project>
