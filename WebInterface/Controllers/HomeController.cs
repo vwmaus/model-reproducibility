@@ -68,16 +68,19 @@ namespace WebInterface.Controllers
             // docker compose yml
 
             // build docker image of program from dockerfile
-            var programDockerfile = "./Output/gams-dockerfile";
+            const string programDockerfile = "./Output/gams-dockerfile";
 
             var fullpath = Path.GetFullPath(programDockerfile);
 
-            Process process = new Process();
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            startInfo.FileName = "/bin/bash";
-            startInfo.Arguments = $@"docker build -f {fullpath} .";
-            startInfo.RedirectStandardOutput = true;
+            var process = new Process();
+            var startInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = "/bin/bash",
+                Arguments = $@"docker build -f {fullpath} .",
+                RedirectStandardOutput = true
+            };
+
             process.StartInfo = startInfo;
             process.Start(); // no such file or directory
 

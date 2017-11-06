@@ -14,6 +14,8 @@ namespace WebInterface.Services
 {
     public class HomeControllerService : ControllerBase
     {
+        public const string TemplatePath = "./Docker-Templates/";
+
         public string GamsDockerfilePath { get; set; }
 
         public string ModelDockerfilePath { get; set; }
@@ -26,7 +28,7 @@ namespace WebInterface.Services
 
             string dockerfileContent;
 
-            const string dockerTemplate = @"./Docker-Templates/gams-dockerfile";
+            const string dockerTemplate = TemplatePath + "gams-dockerfile";
 
             using (var reader = new StreamReader(dockerTemplate))
             {
@@ -71,7 +73,7 @@ namespace WebInterface.Services
 
             string dockerfileContent;
 
-            var dockerTemplate = $@"./Docker-Templates/{templateFileName}";
+            var dockerTemplate = TemplatePath + templateFileName;
 
             using (var reader = new StreamReader(dockerTemplate))
             {
