@@ -22,7 +22,7 @@ namespace WebInterface.Services
 
         public void CreateGamsDockerfile(string licencePath = null, string outputFolder = "")
         {
-            Debug.WriteLine("Create Gams Dockerfile");
+            Debug.WriteLine("Create Gams Dockerfile...");
 
             const string licencePlaceholder = "$GAMS_LICENSE";
 
