@@ -10,10 +10,7 @@ RUN wget -q -c --no-check-certificate https://github.com/vwmaus/${MODEL}/release
      cd /worspace &&\
      7z e /workspace/model.zip 
 
-# Create docker volume 
-VOLUME /workspace
-
 # Run model 
-RUN gams ${MODEL}-${MODEL_VERSION}/main.gms gdx=output
+RUN gams ${MODEL}-${MODEL_VERSION}/main.gms 
 
 
