@@ -16,6 +16,9 @@ namespace WebInterface.Models
         [Required(ErrorMessage = "The program version is required.")]
         public string ProgramVersion { get; set; }
 
+        [Required(ErrorMessage = "The program architecture is required.")]
+        public string ProgramArchitecture { get; set; }
+
         [Required(ErrorMessage = "The model is required.")]
         public string Model { get; set; }
 
@@ -40,5 +43,11 @@ namespace WebInterface.Models
             this.SaveToDatabase = false;
             this.DownloadResult = false;
         }
+    }
+
+    public enum Architectures
+    {
+        x86_32,
+        x64_64
     }
 }

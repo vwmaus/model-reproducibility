@@ -20,11 +20,13 @@ namespace WebInterface.Services
 
         public string ModelDockerfilePath { get; set; }
 
-        public void CreateGamsDockerfile(string licencePath = null, string outputFolder = "")
+        public void CreateGamsDockerfile(string version, string architecture, string licencePath = null, string outputFolder = "")
         {
             Debug.WriteLine("Create Gams Dockerfile...");
 
-            const string licencePlaceholder = "$GAMS_LICENSE";
+            const string licencePlaceholder = "#GAMS_LICENSE#";
+            const string bitArchitecturePlaceholder = "#BIT_ARC#";
+            const string gamsVersionPlaceholder = "#GAMS_VERSION#";
 
             string dockerfileContent;
 
@@ -37,7 +39,7 @@ namespace WebInterface.Services
 
             if (string.IsNullOrEmpty(licencePath))
             {
-                dockerfileContent = dockerfileContent.Replace(@"COPY $GAMS_LICENSE /opt/gams/gamslice.txt", string.Empty);
+                dockerfileContent = dockerfileContent.Replace(@"COPY ${GAMS_LICENSE} /opt/gams/gamslice.txt", "# No licence file found or entered!");
             }
             else
             {
@@ -45,6 +47,10 @@ namespace WebInterface.Services
 
                 dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
             }
+
+            dockerfileContent = dockerfileContent
+                .Replace(bitArchitecturePlaceholder, architecture)
+                .Replace(gamsVersionPlaceholder, version);
 
             if (string.IsNullOrEmpty(outputFolder))
             {
@@ -68,8 +74,8 @@ namespace WebInterface.Services
         {
             Debug.WriteLine("Create Model Dockerfile");
 
-            const string modelPlaceholder = "${MODEL}";
-            const string modelversionPlaceholder = "${MODEL_VERSION}";
+            const string modelPlaceholder = "#MODEL'";
+            const string modelversionPlaceholder = "#MODEL_VERSION#";
 
             string dockerfileContent;
 
