@@ -24,9 +24,9 @@ RUN wget -q -c --no-check-certificate https://d37drm4t2jghv5.cloudfront.net/dist
 
 # Configure GAMS 
 RUN GAMS_PATH=$(dirname $(find / -name gams -type f -executable -print)) &&\ 
-    echo "export PATH=\${PATH}:${GAMS_PATH}" >> ~/.bashrc &&\
-    mv /opt/gams/gamslice.txt ${GAMS_PATH}/gamslice.txt &&\
-    cd ${GAMS_PATH} &&\
+    echo "export PATH=\$PATH:$GAMS_PATH" >> ~/.bashrc &&\
+    mv /opt/gams/gamslice.txt $GAMS_PATH/gamslice.txt &&\
+    cd $GAMS_PATH &&\
     ./gamsinst -a 
 
 CMD ["/bin/bash"] 
