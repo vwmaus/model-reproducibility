@@ -43,7 +43,7 @@ namespace WebInterface.Controllers
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.LicencePath);
+            hs.CreateGamsDockerfile(config.ProgramVersion , config.ProgramArchitecture, config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             var dlFile = hs.CreateDockerZipFile();
@@ -62,7 +62,7 @@ namespace WebInterface.Controllers
             }
 
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.LicencePath);
+            hs.CreateGamsDockerfile(config.ProgramVersion, config.ProgramArchitecture, config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             // docker compose yml
