@@ -1,16 +1,16 @@
 FROM ubuntu:16.04
 
-# Set GAMS version
-ENV GAMS_VERSION=24.8.3
+# Set GAMS version (for instance 24.8.3)
+ENV GAMS_VERSION=1.0
 
 # Set GAMS bit architecture, either 'x64_64' or 'x86_32'
 ENV GAMS_BIT_ARC=x64_64
 
 # Set path to GAMS license 
-ENV GAMS_LICENSE=./gamslice.txt
+ENV GAMS_LICENSE=#GAMS_LICENSE#
 
 # Copy GAMS license 
-COPY C:/Temp/gams licence.txt /opt/gams/gamslice.txt
+# No licence file found or entered!
 
 # Install wget 
 RUN apt-get update && apt-get install -y --no-install-recommends wget 
