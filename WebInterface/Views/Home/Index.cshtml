@@ -78,6 +78,28 @@
         </div>
 
         <div class="form-group">
+            @Html.LabelFor(m => m.GeonodeModelData, "Geonode Model Data")
+            @Html.ValidationMessageFor(m => m.GeonodeModelData)
+            @Html.DropDownListFor(m => m.GeonodeModelData,
+                new List<SelectListItem>
+                {
+                    //new SelectListItem{ Text="transport-model", Value = "1" }
+                },
+                new { @class = "form-control", @id = "geonodeModelData" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.GeonodeModelTag, "Geonode Model Tag")
+            @Html.ValidationMessageFor(m => m.GeonodeModelTag)
+            @Html.DropDownListFor(m => m.GeonodeModelTag,
+                new List<SelectListItem>
+                {
+                    //new SelectListItem{ Text="1.0", Value = "1" }
+                },
+                new { @class = "form-control", @id = "genodelModelTag" })
+        </div>
+
+        <div class="form-group">
             @Html.LabelFor(m => m.LicencePath, "Licence Path")
             @Html.ValidationMessageFor(m => m.LicencePath)
             @Html.TextBoxFor(m => m.LicencePath, new { @class = "form-control", @id = "licencePath", @rows = "1", @value = "", @type = "text" })
