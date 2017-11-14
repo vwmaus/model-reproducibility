@@ -36,7 +36,15 @@ function httpGet(theUrl) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
     xmlHttp.send(null);
-    return xmlHttp;
+    //return xmlHttp;
+
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+            return xmlHttp.responseText;
+        }
+    }
+
+    //return xmlHttp.responseText;
 }
 
 function httpPost(theUrl) {
@@ -92,6 +100,7 @@ function getGithubRepos(owner) {
     // "https://api.github.com/repos/ptrkrnstnr/transport-model/git/refs/tags"
     // https://developer.github.com/v3/git/tags/#get-a-tag
 
+    //https://api.github.com/users/vwmaus/repos
     var url = "https://api.github.com/users/" + owner + "/repos";
 
     function httpGetAsync(theUrl, callback) {
@@ -109,6 +118,7 @@ function getGithubRepos(owner) {
         var xmlHttp = new XMLHttpRequest();
         xmlHttp.open("GET", theUrl, false); // false for synchronous request
         xmlHttp.send(null);
+
         return xmlHttp.responseText;
     }
 
@@ -151,6 +161,9 @@ function ReloadFormData() {
             getGithubVersions(owner, repo);
         }
     }
+
+    // todo: geonode model input
+    getGeoNodeModels();
 }
 
 function DeleteModelData() {
@@ -168,6 +181,86 @@ function DeleteModelVersionData() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+// Geonode
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+//“/api/base” query on the ResourceBase table and returns combined results of Maps, Layers Documents and Services
+//“/api/layers” query the Layer table
+//“/api/maps” query the Map table
+//“/api/documents” query the Document table
+//“/api/groups” query the GroupProfile table (which contains the Groups)
+//“/api/profiles” query the Profile table (which is the geonode authentication table)
+//“/api/categories” query the Category table
+//“/api/keywords” query the Tag table
+//“/api/featured” query the ResourceBase table by limiting the items to the ones flagged as
+
+var geoNodeUrl = "http://localhost:8011/";
+
+function downloadGeoNodeDocument(documentId) {
+    var downloadUrl = geoNodeUrl + "/documents/" + documentId + "/download";
+
+    return false;
+}
+
+function getGeoNodeModels() {
+    //http://localhost:8011/api/documents/
+    var documentsUrl = geoNodeUrl + "api/documents/";
+
+    //var res = httpGet(documentsUrl);
+
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", documentsUrl, false); // false for synchronous request
+    //xmlHttp.send(null);
+    //return xmlHttp;
+
+    xmlHttp.onreadystatechange = function () {
+        //if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+            //alert(xmlHttp.responseText);
+        //}
+        alert("hallo");
+    }
+
+    xmlHttp.ontimeout = alert("timeout");
+
+    //alert(res);
+
+    //var obj = JSON.parse(res);
+    //alert(obj);
+
+    //var tags = new Array();
+
+    //alert(tags);
+
+    //if (Object.prototype.toString.call(obj) === "[object Array]") {
+    //    obj.forEach(function (entry) {
+    //        var tag = entry.abstract;
+    //        console.log(tag);
+    //        tags.push(tag);
+    //    });
+    //}
+
+    //var sel = $("#geonodeModelData");
+
+    //$(sel)
+    //    .find("option")
+    //    .remove()
+    //    .end();
+
+    //$.each(tags, function (val, text) {
+    //    sel.append(
+    //        $("<option></option>").val(text).html(text)
+    //    );
+    //});
+
+    //return false;
+}
+
+function getGeoNodeModelTags() {
+
+    return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 // DOM 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -177,6 +270,7 @@ $(document).ready(function () {
     $("#githubUser").val("vwmaus");
     $("#licensePath").val("");
 
+    // Set change event
     $("#model").change(function () {
         var repo = $("#model option:selected").text();
         var owner = $("#githubUser").val();

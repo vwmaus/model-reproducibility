@@ -31,6 +31,12 @@ namespace WebInterface.Models
 
         public bool DownloadResult { get; set; }
 
+        [Required(ErrorMessage = "The geonode model data is required.")]
+        public string GeonodeModelData { get; set; }
+
+        [Required(ErrorMessage = "The geonode model tag is required.")]
+        public string GeonodeModelTag { get; set; }
+
         public UserConfiguration()
         {
             this.LicencePath = string.Empty;
@@ -38,6 +44,8 @@ namespace WebInterface.Models
             this.ProgramVersion = string.Empty;
             this.Model = string.Empty;
             this.ModelVersion = string.Empty;
+            this.GeonodeModelData = string.Empty;
+            this.GeonodeModelTag = string.Empty;
 
             this.GitHubUser = string.Empty;
             this.SaveToDatabase = false;
