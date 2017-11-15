@@ -38,13 +38,25 @@ function httpGet(theUrl) {
     xmlHttp.send(null);
     //return xmlHttp;
 
-    xmlHttp.onreadystatechange = function () {
+    xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
             return xmlHttp.responseText;
         }
-    }
+        return false;
+    };
 
-    //return xmlHttp.responseText;
+//return xmlHttp.responseText;
+}
+
+function httpGetAsync(theUrl, callback) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
+            callback(xmlHttp.responseText);
+    };
+
+    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
+    xmlHttp.send(null);
 }
 
 function httpPost(theUrl) {
@@ -102,17 +114,6 @@ function getGithubRepos(owner) {
 
     //https://api.github.com/users/vwmaus/repos
     var url = "https://api.github.com/users/" + owner + "/repos";
-
-    function httpGetAsync(theUrl, callback) {
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function () {
-            if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
-                callback(xmlHttp.responseText);
-        };
-
-        xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-        xmlHttp.send(null);
-    }
 
     function httpGet(theUrl) {
         var xmlHttp = new XMLHttpRequest();
@@ -202,25 +203,31 @@ function downloadGeoNodeDocument(documentId) {
     return false;
 }
 
+
+
 function getGeoNodeModels() {
     //http://localhost:8011/api/documents/
     var documentsUrl = geoNodeUrl + "api/documents/";
 
     //var res = httpGet(documentsUrl);
+    httpGetAsync(documentsUrl,
+        function(responseText) {
+            alert(responseText);
+        });
 
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", documentsUrl, false); // false for synchronous request
-    //xmlHttp.send(null);
-    //return xmlHttp;
+    //var xmlHttp = new XMLHttpRequest();
+    //xmlHttp.open("GET", documentsUrl, false); // false for synchronous request
+    ////xmlHttp.send(null);
+    ////return xmlHttp;
 
-    xmlHttp.onreadystatechange = function () {
-        //if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-            //alert(xmlHttp.responseText);
-        //}
-        alert("hallo");
-    }
+    //xmlHttp.onreadystatechange = function () {
+    //    //if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+    //        //alert(xmlHttp.responseText);
+    //    //}
+    //    alert("hallo");
+    //}
 
-    xmlHttp.ontimeout = alert("timeout");
+    //xmlHttp.ontimeout = alert("timeout");
 
     //alert(res);
 
