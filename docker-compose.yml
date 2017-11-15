@@ -3,6 +3,7 @@ version: '3'
 services:
   webinterface:
     image: webinterface
+    container_name: webinterface
     build:
       context: ./WebInterface
       dockerfile: Dockerfile

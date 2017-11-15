@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection.Metadata;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,11 @@ namespace WebInterface.Controllers
     {
         public IActionResult Index()
         {
+            Task.Factory.StartNew(async () =>
+            {
+                await GetGeonodeData();
+            });
+
             return View();
         }
 
@@ -90,6 +96,20 @@ namespace WebInterface.Controllers
 
 
             return View("Index");
+        }
+
+        public async Task GetGeonodeData()
+        {
+            var req = WebRequest.Create(@"http://0.0.0.0:8011/api/documents/");
+            //req.Method = "GET";
+            //req.ContentType = "application/json; charset=utf-8";
+            //req.Timeout = 10;
+            var response = await req.GetResponseAsync().ConfigureAwait(false);
+
+            var responseReader = new StreamReader(response.GetResponseStream());
+            var responseData = await responseReader.ReadToEndAsync();
+
+            //var d = Newtonsoft.Json.JsonConvert. //DeserializeObject<MyData>(responseData);
         }
     }
 }
