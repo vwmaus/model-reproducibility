@@ -100,7 +100,7 @@ namespace WebInterface.Controllers
 
         public async Task GetGeonodeData()
         {
-            var req = WebRequest.Create(@"http://0.0.0.0:8011/api/documents/");
+            var req = WebRequest.Create(@"http://geonode_geonode_1/api/documents/");
             //req.Method = "GET";
             //req.ContentType = "application/json; charset=utf-8";
             //req.Timeout = 10;
