@@ -1,31 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Reflection.Metadata;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNetCore.Mvc;
-using WebInterface.Classes;
-using WebInterface.Models;
-using WebInterface.Services;
-
-namespace WebInterface.Controllers
+﻿namespace WebInterface.Controllers
 {
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Net;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Mvc;
+    using Newtonsoft.Json;
+    using WebInterface.Models;
+    using WebInterface.Services;
+    using System.Linq;
+    using Microsoft.AspNetCore.Mvc.Rendering;
+
     public class HomeController : Controller
-    {
+    { 
+        public List<GithubRepository> GithubRepositories { get; set; }
+
         public IActionResult Index()
         {
+            var userConfig = new UserConfiguration();
+            var repositories = new List<string>();
+
             Task.Factory.StartNew(async () =>
             {
-                await GetGeonodeData();
+                await GetGithubRepositoriesAsync("vwmaus");
+
+                repositories = this.GithubRepositories.Select(repo => repo.Name).ToList();
             });
 
-            return View();
+            //t.ContinueWith(task =>
+            //{
+            //    var x = task.Result;
+            //    var y = t.Result;
+
+
+            //});
+
+            //t.ContinueWith(task =>
+            //    {
+            //        var repos = t.Result;
+
+            //        // Repositories = Models
+            //        if (repos != null)
+            //        {
+            //            //ViewBag.selectList = repos.
+            //        }
+            //    }
+            //);
+            var l = repositories.Select(item => new SelectListItem
+                {
+                    Value = item,
+                    Text = item
+                })
+                .ToList();
+
+            ViewBag.selectList = l.ToAsyncEnumerable();
+
+            return View(userConfig);
         }
 
         public IActionResult About()
@@ -49,7 +80,7 @@ namespace WebInterface.Controllers
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.ProgramVersion , config.ProgramArchitecture, config.LicencePath);
+            hs.CreateGamsDockerfile(config.ProgramVersion, config.ProgramArchitecture, config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             var dlFile = hs.CreateDockerZipFile();
@@ -98,18 +129,57 @@ namespace WebInterface.Controllers
             return View("Index");
         }
 
-        public async Task GetGeonodeData()
+        public async Task<GeoNodeDocument> GetGeonodeData()
         {
             var req = WebRequest.Create(@"http://geonode_geonode_1/api/documents/");
-            //req.Method = "GET";
-            //req.ContentType = "application/json; charset=utf-8";
-            //req.Timeout = 10;
+            var response = await req.GetResponseAsync().ConfigureAwait(false);
+
+            var responseReader = new StreamReader(response.GetResponseStream());
+            var responseData = await responseReader.ReadToEndAsync();
+            var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
+
+            return document;
+        }
+
+        public async Task<List<GithubRepository>> GetGithubRepositoriesAsync(string user)
+        {
+            var url = "https://api.github.com/users/" + user + "/repos";
+            var req = WebRequest.Create(url);
+            var response = await req.GetResponseAsync().ConfigureAwait(false);
+
+            var responseReader = new StreamReader(response.GetResponseStream());
+            var responseData = await responseReader.ReadToEndAsync();
+            var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+            return document;
+        }
+
+        public List<GithubRepository> GetGithubRepositories(string user)
+        {
+            var url = "https://api.github.com/users/" + user + "/repos";
+            var req = WebRequest.Create(url);
+            var response = req.GetResponse();
+
+
+            var responseReader = new StreamReader(response.GetResponseStream());
+            var responseData = responseReader.ReadToEnd();
+            var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+            return document;
+        }
+
+        public async Task<GithubRepositoryVersion> GetGithubRepoVersions(string user, string repository)
+        {
+            var url = "https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags";
+            var req = WebRequest.Create(url);
             var response = await req.GetResponseAsync().ConfigureAwait(false);
 
             var responseReader = new StreamReader(response.GetResponseStream());
             var responseData = await responseReader.ReadToEndAsync();
 
-            //var d = Newtonsoft.Json.JsonConvert. //DeserializeObject<MyData>(responseData);
+            var document = JsonConvert.DeserializeObject<GithubRepositoryVersion>(responseData);
+
+            return document;
         }
     }
 }
