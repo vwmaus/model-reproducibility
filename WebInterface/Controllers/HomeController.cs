@@ -16,53 +16,51 @@
     {
         public List<GithubRepository> GithubRepositories { get; set; }
 
+        [HttpPost]
         public async Task<IActionResult> Index()
         {
             var userConfig = new UserConfiguration();
-            var repositories = new List<string>();
 
             // Github Repositories
             // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
 
-            //Task.Factory.StartNew(async () =>
-            //{
-            //await this.GetGithubRepositoriesAsync("vwmaus");
-            var x = await this.GetGeonodeData();
-            var repos = GetGithubRepositories("vwmaus");
+            var geoNodeDocuments = await this.GetGeonodeData();
+            //var geoNodeDocumentTags = 
+            var repositories = await this.GetGithubRepositories("vwmaus");
+            var repositoryVersions = await this.GetGithubRepoVersions("vwmaus", "transport-model");
 
-
-            //repositories = this.GithubRepositories.Select(repo => repo.Name).ToList();
-            //});
-
-            //t.ContinueWith(task =>
-            //{
-            //    var x = task.Result;
-            //    var y = t.Result;
-
-            //});
-
-            //t.ContinueWith(task =>
-            //    {
-            //        var repos = t.Result;
-
-            //        // Repositories = Models
-            //        if (repos != null)
-            //        {
-            //            //ViewBag.selectList = repos.
-            //        }
-            //    }
-            //);
-            var l = repositories.Select(item => new SelectListItem
-            {
-                Value = item,
-                Text = item
-            })
+            var repoList = repositories.Select(repository => new SelectListItem
+                {
+                    Value = repository.Name,
+                    Text = repository.Name
+                })
                 .ToList();
 
-            this.ViewBag.selectList = l.ToAsyncEnumerable();
+            var repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
+                {
+                    Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                    Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+            })
+            .ToList();
 
-            Debug.Write(x);
-            Debug.Write(repos);
+            var geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
+                {
+                    Value = document.Title,
+                    Text = document.Title
+                })
+                .ToList();
+
+            //var geonodeDocumentTagList = geoNodeDocumentTags.Select(document => new SelectListItem
+            //    {
+            //        Value = document.Title,
+            //        Text = document.Title
+            //    })
+            //    .ToList();
+
+            this.ViewBag.repositories = repoList.ToAsyncEnumerable();
+            this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();
+            this.ViewBag.repositoryVersionList = repositoryVersionList.ToAsyncEnumerable();
+            this.ViewBag.geonodeDocumentTags = new List<SelectListItem>() { }.ToAsyncEnumerable();
 
             return this.View(userConfig);
         }
@@ -81,7 +79,7 @@
 
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier});
         }
 
         [HttpPost]
@@ -101,9 +99,9 @@
         {
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
 
-            if (!ModelState.IsValid)
+            if (!this.ModelState.IsValid)
             {
-                return View("Index");
+                return this.View("Index");
             }
 
             var hs = new HomeControllerService();
@@ -134,69 +132,80 @@
             // build docker image of model
 
 
-            return View("Index");
+            return this.View("Index");
         }
 
         public async Task<GeoNodeDocument> GetGeonodeData()
         {
-            var req = WebRequest.Create(@"http://geonode_geonode_1/api/documents/");
-            var response = await req.GetResponseAsync().ConfigureAwait(false);
-
-            var responseReader = new StreamReader(response.GetResponseStream());
-            var responseData = await responseReader.ReadToEndAsync();
-            var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
-
-            return document;
-        }
-
-        public async Task<List<GithubRepository>> GetGithubRepositoriesAsync(string user)
-        {
-            var url = "https://api.github.com/users/" + user + "/repos";
-            var req = WebRequest.Create(url);
-            var response = await req.GetResponseAsync().ConfigureAwait(false);
-
-            var responseReader = new StreamReader(response.GetResponseStream());
-            var responseData = await responseReader.ReadToEndAsync();
-            var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
-
-            return document;
-        }
-
-        public List<GithubRepository> GetGithubRepositories(string user)
-        {
-            HttpWebRequest request = WebRequest.Create("https://api.github.com/users/" + user + "/repos") as HttpWebRequest;
-            request.UserAgent = "TestApp";
-
-            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            if (!(WebRequest.Create(@"http://geonode_geonode_1/api/documents/") is HttpWebRequest request))
             {
-                StreamReader reader = new StreamReader(response.GetResponseStream());
+                return null;
+            }
+
+            request.UserAgent = "WebInterfaceReproducibility";
+
+            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            {
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
                 var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
 
-                //var url = "https://api.github.com/users/" + user + "/repos";
-                //var req = WebRequest.Create(url);
-                //var response = req.GetResponse();
+                return document;
+            }
+        }
 
+        public async Task<List<GithubRepository>> GetGithubRepositories(string user)
+        {
+            if (!(WebRequest.Create("https://api.github.com/users/" + user + "/repos") is HttpWebRequest request))
+            {
+                return null;
+            }
 
-                //var responseReader = new StreamReader(response.GetResponseStream());
-                //var responseData = responseReader.ReadToEnd();
+            request.UserAgent = "WebInterfaceReproducibility";
+
+            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            {
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
                 var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
 
                 return document;
             }
         }
 
-        public async Task<GithubRepositoryVersion> GetGithubRepoVersions(string user, string repository)
+        public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
         {
-            var url = "https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags";
-            var req = WebRequest.Create(url);
-            var response = await req.GetResponseAsync().ConfigureAwait(false);
+            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags") is
+                HttpWebRequest request))
+            {
+                return null;
+            }
 
-            var responseReader = new StreamReader(response.GetResponseStream());
-            var responseData = await responseReader.ReadToEndAsync();
+            request.UserAgent = "WebInterfaceReproducibility";
 
-            var document = JsonConvert.DeserializeObject<GithubRepositoryVersion>(responseData);
+            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            {
+                if (response == null)
+                {
+                    return null;
+                }
 
-            return document;
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepositoryVersion>>(responseData);
+
+                return document;
+            }
         }
     }
 }
