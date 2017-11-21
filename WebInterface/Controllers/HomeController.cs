@@ -13,26 +13,31 @@
     using Microsoft.AspNetCore.Mvc.Rendering;
 
     public class HomeController : Controller
-    { 
+    {
         public List<GithubRepository> GithubRepositories { get; set; }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             var userConfig = new UserConfiguration();
             var repositories = new List<string>();
 
-            Task.Factory.StartNew(async () =>
-            {
-                await GetGithubRepositoriesAsync("vwmaus");
+            // Github Repositories
+            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
 
-                repositories = this.GithubRepositories.Select(repo => repo.Name).ToList();
-            });
+            //Task.Factory.StartNew(async () =>
+            //{
+            //await this.GetGithubRepositoriesAsync("vwmaus");
+            var x = await this.GetGeonodeData();
+            var repos = GetGithubRepositories("vwmaus");
+
+
+            //repositories = this.GithubRepositories.Select(repo => repo.Name).ToList();
+            //});
 
             //t.ContinueWith(task =>
             //{
             //    var x = task.Result;
             //    var y = t.Result;
-
 
             //});
 
@@ -48,15 +53,18 @@
             //    }
             //);
             var l = repositories.Select(item => new SelectListItem
-                {
-                    Value = item,
-                    Text = item
-                })
+            {
+                Value = item,
+                Text = item
+            })
                 .ToList();
 
-            ViewBag.selectList = l.ToAsyncEnumerable();
+            this.ViewBag.selectList = l.ToAsyncEnumerable();
 
-            return View(userConfig);
+            Debug.Write(x);
+            Debug.Write(repos);
+
+            return this.View(userConfig);
         }
 
         public IActionResult About()
@@ -156,16 +164,25 @@
 
         public List<GithubRepository> GetGithubRepositories(string user)
         {
-            var url = "https://api.github.com/users/" + user + "/repos";
-            var req = WebRequest.Create(url);
-            var response = req.GetResponse();
+            HttpWebRequest request = WebRequest.Create("https://api.github.com/users/" + user + "/repos") as HttpWebRequest;
+            request.UserAgent = "TestApp";
+
+            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            {
+                StreamReader reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+
+                //var url = "https://api.github.com/users/" + user + "/repos";
+                //var req = WebRequest.Create(url);
+                //var response = req.GetResponse();
 
 
-            var responseReader = new StreamReader(response.GetResponseStream());
-            var responseData = responseReader.ReadToEnd();
-            var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+                //var responseReader = new StreamReader(response.GetResponseStream());
+                //var responseData = responseReader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
 
-            return document;
+                return document;
+            }
         }
 
         public async Task<GithubRepositoryVersion> GetGithubRepoVersions(string user, string repository)
