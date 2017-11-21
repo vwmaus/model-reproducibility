@@ -10,7 +10,7 @@
         public Meta Meta { get; set; }
 
         [JsonProperty("objects")]
-        public List<Object> Objects { get; set; }
+        public List<Object> Documents { get; set; }
     }
 
     public partial class Object
