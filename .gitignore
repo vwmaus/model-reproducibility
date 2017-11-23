@@ -1,3 +1,5 @@
+!WebInterface/obj/Docker
+*.obj
 *.exe
 *.pdb
 *.user
@@ -23,6 +25,7 @@
 *.user
 _ReSharper.*/
 *.sdf
+obj/
 bin/
 Debug/
 Release/
