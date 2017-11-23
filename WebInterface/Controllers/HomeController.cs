@@ -16,51 +16,11 @@
     {
         public List<GithubRepository> GithubRepositories { get; set; }
 
-        [HttpPost]
         public async Task<IActionResult> Index()
         {
             var userConfig = new UserConfiguration();
 
-            // Github Repositories
-            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
-
-            var geoNodeDocuments = await this.GetGeonodeData();
-            //var geoNodeDocumentTags = 
-            var repositories = await this.GetGithubRepositories("vwmaus");
-            var repositoryVersions = await this.GetGithubRepoVersions("vwmaus", "transport-model");
-
-            var repoList = repositories.Select(repository => new SelectListItem
-                {
-                    Value = repository.Name,
-                    Text = repository.Name
-                })
-                .ToList();
-
-            var repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
-                {
-                    Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                    Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-            })
-            .ToList();
-
-            var geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
-                {
-                    Value = document.Title,
-                    Text = document.Title
-                })
-                .ToList();
-
-            //var geonodeDocumentTagList = geoNodeDocumentTags.Select(document => new SelectListItem
-            //    {
-            //        Value = document.Title,
-            //        Text = document.Title
-            //    })
-            //    .ToList();
-
-            this.ViewBag.repositories = repoList.ToAsyncEnumerable();
-            this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();
-            this.ViewBag.repositoryVersionList = repositoryVersionList.ToAsyncEnumerable();
-            this.ViewBag.geonodeDocumentTags = new List<SelectListItem>() { }.ToAsyncEnumerable();
+            await this.LoadConfigData();
 
             return this.View(userConfig);
         }
@@ -79,7 +39,7 @@
 
         public IActionResult Error()
         {
-            return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier});
+            return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier});
         }
 
         [HttpPost]
@@ -135,77 +95,54 @@
             return this.View("Index");
         }
 
-        public async Task<GeoNodeDocument> GetGeonodeData()
+        public async Task LoadConfigData(string user = "vwmaus", string repoName = "")
         {
-            if (!(WebRequest.Create(@"http://geonode_geonode_1/api/documents/") is HttpWebRequest request))
+            var homeControllerService = new HomeControllerService();
+
+            var geoNodeDocuments = await homeControllerService.GetGeonodeData();
+            var geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
             {
-                return null;
+                Value = document.Title,
+                Text = document.Title
+            })
+                .ToList();
+
+            // TODO: Get GeoNode Document Tags
+            //var geoNodeDocumentTags = 
+
+            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
+            var repositories = await homeControllerService.GetGithubRepositories(user);
+            var repoList = repositories.Select(repository => new SelectListItem
+            {
+                Value = repository.Name,
+                Text = repository.Name
+            })
+                .ToList();
+
+            if (string.IsNullOrEmpty(repoName))
+            {
+                repoName = repositories.First().FullName;
             }
 
-            request.UserAgent = "WebInterfaceReproducibility";
-
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            var repositoryVersions = await homeControllerService.GetGithubRepoVersions(user, repoName);
+            var repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
             {
-                if (response == null)
-                {
-                    return null;
-                }
+                Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+            })
+                .ToList();
 
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
+            //var geonodeDocumentTagList = geoNodeDocumentTags.Select(document => new SelectListItem
+            //    {
+            //        Value = document.Title,
+            //        Text = document.Title
+            //    })
+            //    .ToList();
 
-                return document;
-            }
-        }
-
-        public async Task<List<GithubRepository>> GetGithubRepositories(string user)
-        {
-            if (!(WebRequest.Create("https://api.github.com/users/" + user + "/repos") is HttpWebRequest request))
-            {
-                return null;
-            }
-
-            request.UserAgent = "WebInterfaceReproducibility";
-
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
-            {
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
-
-                return document;
-            }
-        }
-
-        public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
-        {
-            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags") is
-                HttpWebRequest request))
-            {
-                return null;
-            }
-
-            request.UserAgent = "WebInterfaceReproducibility";
-
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
-            {
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<List<GithubRepositoryVersion>>(responseData);
-
-                return document;
-            }
+            this.ViewBag.repositories = repoList.ToAsyncEnumerable();
+            this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();
+            this.ViewBag.repositoryVersionList = repositoryVersionList.ToAsyncEnumerable();
+            this.ViewBag.geonodeDocumentTags = new List<SelectListItem>().ToAsyncEnumerable();
         }
     }
 }

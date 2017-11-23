@@ -1,0 +1,1 @@
+copy /Y "$(SolutionDir)Docker-Templates" "$(SolutionDir)\WebInterface\Docker-Templates\"
