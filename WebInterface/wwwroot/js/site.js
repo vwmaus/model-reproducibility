@@ -2,6 +2,9 @@
 // Functions
 /////////////////////////////////////////////////////////////////////////////////////////////
 
+// ajax call controller action:
+// https://stackoverflow.com/questions/12559515/jquery-ajax-call-to-controller
+
 function runScript() {
     window.alert("runScript");
     return false;
