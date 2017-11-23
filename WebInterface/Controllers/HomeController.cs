@@ -39,7 +39,7 @@
 
         public IActionResult Error()
         {
-            return View(new ErrorViewModel {RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier});
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
         }
 
         [HttpPost]
@@ -100,44 +100,59 @@
             var homeControllerService = new HomeControllerService();
 
             var geoNodeDocuments = await homeControllerService.GetGeonodeData();
-            var geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
+
+            var geonodeDocumentList = new List<SelectListItem>();
+            if (geoNodeDocuments != null)
             {
-                Value = document.Title,
-                Text = document.Title
-            })
-                .ToList();
+                geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
+                {
+                    Value = document.Title,
+                    Text = document.Title
+                })
+                    .ToList();
+            }
 
             // TODO: Get GeoNode Document Tags
             //var geoNodeDocumentTags = 
-
-            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
-            var repositories = await homeControllerService.GetGithubRepositories(user);
-            var repoList = repositories.Select(repository => new SelectListItem
-            {
-                Value = repository.Name,
-                Text = repository.Name
-            })
-                .ToList();
-
-            if (string.IsNullOrEmpty(repoName))
-            {
-                repoName = repositories.First().FullName;
-            }
-
-            var repositoryVersions = await homeControllerService.GetGithubRepoVersions(user, repoName);
-            var repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
-            {
-                Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-            })
-                .ToList();
-
             //var geonodeDocumentTagList = geoNodeDocumentTags.Select(document => new SelectListItem
             //    {
             //        Value = document.Title,
             //        Text = document.Title
             //    })
             //    .ToList();
+
+            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
+            var repositories = await homeControllerService.GetGithubRepositories(user);
+
+            var repoList = new List<SelectListItem>();
+            var repositoryVersionList = new List<SelectListItem>();
+
+            if (repositories != null)
+            {
+                repoList = repositories.Select(repository => new SelectListItem
+                {
+                    Value = repository.Name,
+                    Text = repository.Name
+                })
+                    .ToList();
+
+                if (string.IsNullOrEmpty(repoName))
+                {
+                    repoName = repositories.First().Name;
+                }
+
+                var repositoryVersions = await homeControllerService.GetGithubRepoVersions(user, repoName);
+
+                if (repositoryVersions != null)
+                {
+                    repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
+                    {
+                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                    })
+                        .ToList();
+                }
+            }
 
             this.ViewBag.repositories = repoList.ToAsyncEnumerable();
             this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();

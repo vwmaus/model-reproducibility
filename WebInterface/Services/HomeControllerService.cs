@@ -156,8 +156,10 @@ namespace WebInterface.Services
 
             request.UserAgent = "WebInterfaceReproducibility";
 
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            try
             {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
                 if (response == null)
                 {
                     return null;
@@ -169,6 +171,12 @@ namespace WebInterface.Services
 
                 return document;
             }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return null;
         }
 
         public async Task<List<GithubRepository>> GetGithubRepositories(string user)
@@ -180,8 +188,11 @@ namespace WebInterface.Services
 
             request.UserAgent = "WebInterfaceReproducibility";
 
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            try
             {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
                 if (response == null)
                 {
                     return null;
@@ -193,6 +204,12 @@ namespace WebInterface.Services
 
                 return document;
             }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return null;
         }
 
         public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
@@ -205,8 +222,10 @@ namespace WebInterface.Services
 
             request.UserAgent = "WebInterfaceReproducibility";
 
-            using (var response = await request.GetResponseAsync().ConfigureAwait(false))
+            try
             {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
                 if (response == null)
                 {
                     return null;
@@ -218,6 +237,12 @@ namespace WebInterface.Services
 
                 return document;
             }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return null;
         }
     }
 }
