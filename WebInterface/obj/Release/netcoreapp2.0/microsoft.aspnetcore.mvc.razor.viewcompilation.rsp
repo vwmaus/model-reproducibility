@@ -1,0 +1,12 @@
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface
+--output-path=obj\Release\netcoreapp2.0\
+--application-name=WebInterface
+--content-root=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Home\About.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Home\Contact.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Home\Index.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Shared\Error.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Shared\_Layout.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\Shared\_ValidationScriptsPartial.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\_ViewImports.cshtml
+--file=D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\Views\_ViewStart.cshtml
