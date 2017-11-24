@@ -39,6 +39,8 @@ namespace WebInterface.Models
 
         public UserConfiguration()
         {
+            //https://stackoverflow.com/questions/26585495/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
+
             this.LicencePath = string.Empty;
             this.Program = string.Empty;
             this.ProgramVersion = string.Empty;

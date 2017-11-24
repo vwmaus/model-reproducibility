@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -18,6 +19,8 @@ namespace WebInterface.Services
 
     public class HomeControllerService : ControllerBase
     {
+        public new string User => "User" + new Random().Next();
+
         public const string TemplatePath = "./Docker-Templates/";
 
         public string GamsDockerfilePath { get; set; }
@@ -154,7 +157,7 @@ namespace WebInterface.Services
                 return null;
             }
 
-            request.UserAgent = "WebInterfaceReproducibility";
+            request.UserAgent = this.User;
 
             try
             {
@@ -171,9 +174,9 @@ namespace WebInterface.Services
 
                 return document;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                Debug.Write(ex);
             }
 
             return null;
@@ -186,7 +189,7 @@ namespace WebInterface.Services
                 return null;
             }
 
-            request.UserAgent = "WebInterfaceReproducibility";
+            request.UserAgent = this.User;
 
             try
             {
@@ -204,9 +207,9 @@ namespace WebInterface.Services
 
                 return document;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                Debug.Write(ex);
             }
 
             return null;
@@ -220,7 +223,7 @@ namespace WebInterface.Services
                 return null;
             }
 
-            request.UserAgent = "WebInterfaceReproducibility";
+            request.UserAgent = this.User;
 
             try
             {
@@ -237,9 +240,9 @@ namespace WebInterface.Services
 
                 return document;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                Debug.Write(ex);
             }
 
             return null;

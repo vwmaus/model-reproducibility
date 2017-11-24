@@ -1,4 +1,5 @@
-!Mode-Reproducibility-Webpage/WebInterface/obj
+!WebInterface/obj/
+!WebInterface/obj/*
 *.obj
 *.exe
 *.pdb
