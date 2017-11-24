@@ -1,3 +1,5 @@
+!WebInterface/obj/
+!WebInterface/obj/*
 *.obj
 *.exe
 *.pdb
@@ -24,8 +26,8 @@
 *.user
 _ReSharper.*/
 *.sdf
-bin/
 obj/
+bin/
 Debug/
 Release/
 *.opensdf
