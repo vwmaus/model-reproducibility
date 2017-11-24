@@ -57,25 +57,25 @@
         <div class="form-group">
             @Html.LabelFor(m => m.Model, "Model / Script")
             @Html.ValidationMessageFor(m => m.Model)
-            @Html.DropDownListFor(m => m.Model, ViewBag.repositories as IEnumerable<SelectListItem>, new { @class = "form-control", @id = "model" })
+            @Html.DropDownListFor(m => m.Model, (IEnumerable<SelectListItem>)ViewBag.repositories, new { @class = "form-control", @id = "model" })
         </div>
 
         <div class="form-group">
             @Html.LabelFor(m => m.ModelVersion, "Model Version")
             @Html.ValidationMessageFor(m => m.ModelVersion)
-            @Html.DropDownListFor(m => m.ModelVersion, ViewBag.repositoryVersionList as IEnumerable<SelectListItem>, new { @class = "form-control", @id = "modelversion" })
+            @Html.DropDownListFor(m => m.ModelVersion, (IEnumerable<SelectListItem>)ViewBag.repositoryVersionList, new { @class = "form-control", @id = "modelversion" })
         </div>
 
         <div class="form-group">
             @Html.LabelFor(m => m.GeonodeModelData, "Geonode Model Data")
             @Html.ValidationMessageFor(m => m.GeonodeModelData)
-            @Html.DropDownListFor(m => m.Model, ViewBag.geonodeDocuments as IEnumerable<SelectListItem>, new { @class = "form-control", @id = "geonodeModelData" })
+            @Html.DropDownListFor(m => m.GeonodeModelData, (IEnumerable<SelectListItem>)ViewBag.geonodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
         </div>
 
         <div class="form-group">
             @Html.LabelFor(m => m.GeonodeModelTag, "Geonode Model Tag")
             @Html.ValidationMessageFor(m => m.GeonodeModelTag)
-            @Html.DropDownListFor(m => m.GeonodeModelTag, ViewBag.geonodeDocumentTags as IEnumerable<SelectListItem>, new { @class = "form-control", @id = "genodelModelTag" })
+            @Html.DropDownListFor(m => m.GeonodeModelTag, (IEnumerable<SelectListItem>)ViewBag.geonodeDocumentTags, new { @class = "form-control", @id = "genodelModelTag" })
         </div>
 
         <div class="form-group">
@@ -101,14 +101,19 @@
         <br />
 
         <div class="form-group">
-                <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
+            <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
         </div>
 
         <div class="form-group">
-                <input type="submit" value="Run Script" class="btn btn-default" asp-action="RunScript" asp-controller="Home"/>
+            <a id="btn_downloadGeonodeData" class="btn btn-default">Download Geonode File</a>
         </div>
 
+        <div class="form-group">
+            <input type="submit" value="Run Script" class="btn btn-default" asp-action="RunScript" asp-controller="Home"/>
+        </div>
 
         Html.EndForm();
     }
+    
+    <div id="downloadSection"></div>
 </div>

@@ -1,1 +1,5 @@
 copy /Y "$(SolutionDir)Docker-Templates" "$(SolutionDir)\WebInterface\Docker-Templates\"
+
+// Publish project (in cmd)
+dotnet publish ./WebInterface.sln -c Release -o ./obj/Docker/publish
+// creates files in \WebInterface\obj\Docker\publish

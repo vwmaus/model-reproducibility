@@ -200,10 +200,12 @@ function DeleteModelVersionData() {
 
 var geoNodeUrl = "http://localhost:8011/";
 
-function downloadGeoNodeDocument(documentId) {
-    var downloadUrl = geoNodeUrl + "/documents/" + documentId + "/download";
+function downloadGeoNodeDocument() {
+    var documentId = $("#geonodeModelData").find(":selected").val();
 
-    return false;
+    var url = geoNodeUrl + "documents/" + documentId + "/download";
+
+    return url;
 }
 
 
@@ -277,6 +279,10 @@ function getGeoNodeModelTags() {
 $(document).ready(function () {
     $("#btn_runScript").click(runScript);
 
+    $("#downloadSection").append("<button>ButtonTest</button>");
+
+    $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
+
     $("#githubUser").val("vwmaus");
     $("#licensePath").val("");
 
@@ -291,6 +297,10 @@ $(document).ready(function () {
             .end();
 
         getGithubVersions(owner, repo);
+    });
+
+    $("#geonodeModelData").change(function() {
+        $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
     });
 
     $("#githubUser").change(function () {

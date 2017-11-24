@@ -55,9 +55,17 @@
         }
 
         [HttpPost]
+        public IActionResult DownDownloadGeonodeFile(string id)
+        {
+            var hs = new HomeControllerService();
+            return hs.DownloadFile("http://localhost:8011/documents/34/download", "dockerfile.zip");
+        }
+
+        [HttpPost]
         public IActionResult RunScript(UserConfiguration config)
         {
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
+            // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
 
             if (!this.ModelState.IsValid)
             {
@@ -91,7 +99,6 @@
 
             // build docker image of model
 
-
             return this.View("Index");
         }
 
@@ -106,10 +113,10 @@
             {
                 geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
                 {
-                    Value = document.Title,
+                    Value = document.Id.ToString(),
                     Text = document.Title
                 })
-                    .ToList();
+                .ToList();
             }
 
             // TODO: Get GeoNode Document Tags
@@ -150,13 +157,15 @@
                         Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
                         Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
                     })
-                        .ToList();
+                    .ToList();
                 }
             }
 
             this.ViewBag.repositories = repoList.ToAsyncEnumerable();
             this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();
             this.ViewBag.repositoryVersionList = repositoryVersionList.ToAsyncEnumerable();
+
+            // Todo:
             this.ViewBag.geonodeDocumentTags = new List<SelectListItem>().ToAsyncEnumerable();
         }
     }
