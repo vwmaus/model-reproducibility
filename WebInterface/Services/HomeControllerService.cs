@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -12,8 +13,14 @@ using WebInterface.Models;
 
 namespace WebInterface.Services
 {
+    using System.Net;
+    using Microsoft.AspNetCore.Mvc.Rendering;
+    using Newtonsoft.Json;
+
     public class HomeControllerService : ControllerBase
     {
+        public new string User => "User" + new Random().Next();
+
         public const string TemplatePath = "./Docker-Templates/";
 
         public string GamsDockerfilePath { get; set; }
@@ -121,7 +128,7 @@ namespace WebInterface.Services
         public string CreateDockerZipFile()
         {
             const string filename = "dockerfiles.zip";
-            string outputfile = $@"./OutputZip/{filename}";
+            var outputfile = $@"./OutputZip/{filename}";
             const string inputPath = "./Output/";
 
             if (System.IO.File.Exists(outputfile))
@@ -141,6 +148,104 @@ namespace WebInterface.Services
 
             byte[] fileBytes = System.IO.File.ReadAllBytes(filepath);
             return File(fileBytes, "application/x-msdownload", downloadFilename);
+        }
+
+        public async Task<GeoNodeDocument> GetGeonodeData()
+        {
+            if (!(WebRequest.Create(@"http://geonode_geonode_1/api/documents/") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubRepository>> GetGithubRepositories(string user)
+        {
+            if (!(WebRequest.Create("https://api.github.com/users/" + user + "/repos") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
+        {
+            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags") is
+                HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepositoryVersion>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
         }
     }
 }

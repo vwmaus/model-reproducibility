@@ -31,13 +31,23 @@ namespace WebInterface.Models
 
         public bool DownloadResult { get; set; }
 
+        [Required(ErrorMessage = "The geonode model data is required.")]
+        public string GeonodeModelData { get; set; }
+
+        [Required(ErrorMessage = "The geonode model tag is required.")]
+        public string GeonodeModelTag { get; set; }
+
         public UserConfiguration()
         {
+            //https://stackoverflow.com/questions/26585495/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
+
             this.LicencePath = string.Empty;
             this.Program = string.Empty;
             this.ProgramVersion = string.Empty;
             this.Model = string.Empty;
             this.ModelVersion = string.Empty;
+            this.GeonodeModelData = string.Empty;
+            this.GeonodeModelTag = string.Empty;
 
             this.GitHubUser = string.Empty;
             this.SaveToDatabase = false;
