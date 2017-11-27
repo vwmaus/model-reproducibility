@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using WebInterface.Classes;
-using WebInterface.Models;
-
-namespace WebInterface.Services
+﻿namespace WebInterface.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.IO.Compression;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Mvc;
+    using WebInterface.Classes;
+    using WebInterface.Models;
     using System.Net;
-    using Microsoft.AspNetCore.Mvc.Rendering;
     using Newtonsoft.Json;
 
     public class HomeControllerService : ControllerBase
@@ -81,7 +76,7 @@ namespace WebInterface.Services
         {
             Debug.WriteLine("Create Model Dockerfile");
 
-            const string modelPlaceholder = "#MODEL'";
+            const string modelPlaceholder = "#MODEL#";
             const string modelversionPlaceholder = "#MODEL_VERSION#";
 
             string dockerfileContent;
@@ -93,19 +88,19 @@ namespace WebInterface.Services
                 dockerfileContent = reader.ReadToEnd();
             }
 
-            if (userConfiguration.ModelVersion.IsNullOrEmpty())
+            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
             {
                 throw new Exception("Version must not be null or empty!");
             }
 
-            if (userConfiguration.Model.IsNullOrEmpty())
+            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
             {
                 throw new Exception("Model must not be null or empty!");
             }
 
             dockerfileContent = dockerfileContent
-                .Replace(modelversionPlaceholder, userConfiguration.ModelVersion)
-                .Replace(modelPlaceholder, userConfiguration.Model);
+                .Replace(modelversionPlaceholder, userConfiguration.SelectedGithubRepositoryVersion)
+                .Replace(modelPlaceholder, userConfiguration.SelectedGithubRepository);
 
             if (string.IsNullOrEmpty(outputFolder))
             {
@@ -204,6 +199,39 @@ namespace WebInterface.Services
                 var reader = new StreamReader(response.GetResponseStream());
                 var responseData = reader.ReadToEnd();
                 var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubContent>> GetGithubRepoContents(string user, string repo)
+        {
+            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repo + "/contents") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubContent>>(responseData);
 
                 return document;
             }
