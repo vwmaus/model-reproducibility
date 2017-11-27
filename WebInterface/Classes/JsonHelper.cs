@@ -17,5 +17,9 @@
         public static GeoNodeDocument GeoNodeDocumentFromJson(string json) => JsonConvert.DeserializeObject<GeoNodeDocument>(json, Converter.Settings);
 
         public static string GeoNodeDocumentToJson(GeoNodeDocument self) => JsonConvert.SerializeObject(self, Converter.Settings);
+
+        public static GithubContent[] GithubContentFromJson(string json) => JsonConvert.DeserializeObject<GithubContent[]>(json, Converter.Settings);
+
+        public static string GithubContentToJson(this GithubContent[] self) => JsonConvert.SerializeObject(self, Converter.Settings);
     }
 }

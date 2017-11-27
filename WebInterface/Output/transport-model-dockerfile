@@ -1,10 +1,10 @@
 FROM gams:24.8.3-x64_64
 
 # Set model 
-ENV MODEL=#MODEL#
+ENV MODEL=OSCAR#
 
 # Set model version
-ENV MODEL_VERSION=#MODELVERSION#
+ENV MODEL_VERSION=v2.2
 
 RUN wget -q -c --no-check-certificate https://github.com/vwmaus/${MODEL}/releases/${MODEL_VERSION}.zip -O /workspace/model.zip &&\
      cd /worspace &&\

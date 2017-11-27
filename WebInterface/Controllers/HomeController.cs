@@ -1,12 +1,12 @@
-﻿namespace WebInterface.Controllers
+﻿using System.Runtime.InteropServices.WindowsRuntime;
+
+namespace WebInterface.Controllers
 {
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Net;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc;
-    using Newtonsoft.Json;
     using WebInterface.Models;
     using WebInterface.Services;
     using System.Linq;
@@ -18,9 +18,7 @@
 
         public async Task<IActionResult> Index()
         {
-            var userConfig = new UserConfiguration();
-
-            await this.LoadConfigData();
+            var userConfig = await this.GetUserConfig(new UserConfiguration());
 
             return this.View(userConfig);
         }
@@ -46,7 +44,7 @@
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.ProgramVersion, config.ProgramArchitecture, config.LicencePath);
+            hs.CreateGamsDockerfile(config.SelectedProgramVersion, config.ProgramArchitecture, config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             var dlFile = hs.CreateDockerZipFile();
@@ -69,11 +67,11 @@
 
             if (!this.ModelState.IsValid)
             {
-                return this.View("Index");
+                return this.View("Index", config);
             }
 
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.ProgramVersion, config.ProgramArchitecture, config.LicencePath);
+            hs.CreateGamsDockerfile(config.SelectedProgramVersion, config.ProgramArchitecture, config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             // docker compose yml
@@ -99,24 +97,31 @@
 
             // build docker image of model
 
-            return this.View("Index");
+            return this.View("Index", config);
         }
 
-        public async Task LoadConfigData(string user = "vwmaus", string repoName = "")
+        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig,
+            string programRepo = "gams-docker")
         {
+            if (userConfig == null)
+            {
+                userConfig = new UserConfiguration();
+            }
+
             var homeControllerService = new HomeControllerService();
 
-            var geoNodeDocuments = await homeControllerService.GetGeonodeData();
-
-            var geonodeDocumentList = new List<SelectListItem>();
-            if (geoNodeDocuments != null)
+            if (userConfig.GeoNodeDocuments.Count == 0)
             {
-                geonodeDocumentList = geoNodeDocuments.Documents.Select(document => new SelectListItem
+                var geoNodeDocuments = await homeControllerService.GetGeonodeData();
+                if (geoNodeDocuments != null)
                 {
-                    Value = document.Id.ToString(),
-                    Text = document.Title
-                })
-                .ToList();
+                    userConfig.GeoNodeDocuments = geoNodeDocuments.Documents.Select(document => new SelectListItem
+                    {
+                        Value = document.Id.ToString(),
+                        Text = document.Title
+                    })
+                        .ToList();
+                }
             }
 
             // TODO: Get GeoNode Document Tags
@@ -129,44 +134,59 @@
             //    .ToList();
 
             // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
-            var repositories = await homeControllerService.GetGithubRepositories(user);
-
-            var repoList = new List<SelectListItem>();
-            var repositoryVersionList = new List<SelectListItem>();
-
-            if (repositories != null)
+            if (userConfig.GithubRepositories.Count == 0)
             {
-                repoList = repositories.Select(repository => new SelectListItem
+                var repositories = await homeControllerService.GetGithubRepositories(userConfig.GitHubUser);
+                if (repositories != null)
                 {
-                    Value = repository.Name,
-                    Text = repository.Name
-                })
-                    .ToList();
-
-                if (string.IsNullOrEmpty(repoName))
-                {
-                    repoName = repositories.First().Name;
-                }
-
-                var repositoryVersions = await homeControllerService.GetGithubRepoVersions(user, repoName);
-
-                if (repositoryVersions != null)
-                {
-                    repositoryVersionList = repositoryVersions.Select(version => new SelectListItem
+                    userConfig.GithubRepositories = repositories.Select(repository => new SelectListItem
                     {
-                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                        Value = repository.Name,
+                        Text = repository.Name
                     })
-                    .ToList();
+                        .ToList();
+
+                    if (string.IsNullOrEmpty(userConfig.SelectedGithubRepository))
+                    {
+                        userConfig.SelectedGithubRepository = repositories.First().Name;
+                    }
+
+                    var repositoryVersions =
+                        await homeControllerService.GetGithubRepoVersions(userConfig.GitHubUser,
+                            userConfig.SelectedGithubRepository);
+                    if (repositoryVersions != null)
+                    {
+                        userConfig.GithubRepositoryVersions = repositoryVersions.Select(version => new SelectListItem
+                        {
+                            Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                            Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                        })
+                            .ToList();
+                    }
                 }
             }
 
-            this.ViewBag.repositories = repoList.ToAsyncEnumerable();
-            this.ViewBag.geonodeDocuments = geonodeDocumentList.ToAsyncEnumerable();
-            this.ViewBag.repositoryVersionList = repositoryVersionList.ToAsyncEnumerable();
+            if (userConfig.ProgramVersions.Count != 0)
+            {
+                return userConfig;
+            }
 
-            // Todo:
-            this.ViewBag.geonodeDocumentTags = new List<SelectListItem>().ToAsyncEnumerable();
+            var programVersions = await homeControllerService.GetGithubRepoContents(userConfig.GitHubUser, programRepo);
+
+            if (programVersions == null)
+            {
+                return userConfig;
+            }
+
+            programVersions = programVersions.Where(x => x.Type == "dir").ToList();
+            userConfig.ProgramVersions = programVersions.Select(version => new SelectListItem
+            {
+                Value = version.Name,
+                Text = version.Name
+            })
+                .ToList();
+
+            return userConfig;
         }
     }
 }
