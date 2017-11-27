@@ -1,2 +1,6 @@
 language: csharp
 solution: WebInterface.sln
+install:
+  - nuget # lets get version number
+  - nuget restore src/WebInterface.sln -Verbosity detailed
+  - nuget update src/WebInterface.sln -Verbosity detailed
