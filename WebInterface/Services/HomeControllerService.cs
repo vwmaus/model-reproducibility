@@ -1,4 +1,6 @@
-﻿namespace WebInterface.Services
+﻿using Microsoft.IdentityModel.Protocols;
+
+namespace WebInterface.Services
 {
     using System;
     using System.Collections.Generic;
@@ -199,6 +201,40 @@
                 var reader = new StreamReader(response.GetResponseStream());
                 var responseData = reader.ReadToEnd();
                 var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<DockerhubRepositoryTags> GetDockerhubRepositoryTags(string user, string repo)
+        {
+            // https://hub.docker.com/v2/repositories/iiasa/gams/tags/
+            if (!(WebRequest.Create("https://hub.docker.com/v2/repositories/" + user + "/" + repo + "/tags") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<DockerhubRepositoryTags>(responseData);
 
                 return document;
             }

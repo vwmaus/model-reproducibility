@@ -100,8 +100,7 @@ namespace WebInterface.Controllers
             return this.View("Index", config);
         }
 
-        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig,
-            string programRepo = "gams-docker")
+        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")
         {
             if (userConfig == null)
             {
@@ -171,20 +170,28 @@ namespace WebInterface.Controllers
                 return userConfig;
             }
 
-            var programVersions = await homeControllerService.GetGithubRepoContents(userConfig.GitHubUser, programRepo);
+            //var programVersions = await homeControllerService.GetGithubRepoContents(userConfig.GitHubUser, programRepo);
+            var programVersions = await homeControllerService.GetDockerhubRepositoryTags(userConfig.DockerhubUser, userConfig.DockerhubProgramRepository);
 
             if (programVersions == null)
             {
                 return userConfig;
             }
 
-            programVersions = programVersions.Where(x => x.Type == "dir").ToList();
-            userConfig.ProgramVersions = programVersions.Select(version => new SelectListItem
+            //programVersions = programVersions.Where(x => x.Type == "dir").ToList();
+            //userConfig.ProgramVersions = programVersions.Select(version => new SelectListItem
+            //{
+            //    Value = version.Name,
+            //    Text = version.Name
+            //})
+            //    .ToList();
+
+            userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version => new SelectListItem
             {
                 Value = version.Name,
-                Text = version.Name
+                Text = version.Name + " [" + version.Images.First().Architecture + "]"
             })
-                .ToList();
+            .ToList();
 
             return userConfig;
         }
