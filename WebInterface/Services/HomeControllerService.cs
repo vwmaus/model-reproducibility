@@ -72,7 +72,7 @@
             this.GamsDockerfilePath = outputfile;
         }
 
-        public void CreateModelDockerfile(UserConfiguration userConfiguration, string outputFolder = "", string templateFileName = "transport-model-dockerfile")
+        public void CreateModelDockerfile(UserConfiguration userConfiguration, string outputFolder = "", string templateFileName = "Dockerfile-model")
         {
             Debug.WriteLine("Create Model Dockerfile");
 

@@ -1,0 +1,27 @@
+FROM iiasa/gams:#GAMS_VERSION#
+MAINTAINER "Victor Maus" maus@iiasa.ac.at
+
+# Get github repository from web inteface
+ENV GITHUB_USER=#GITHUB_USER#
+
+# Get github repository from web interface 
+ENV GITHUB_REPO=#MODEL#
+
+# Get model version from web interface 
+ENV GITHUB_RELEASE=#MODEL_VERSION#
+
+# Get data version from web interface 
+ENV GEONODE_DATA=#DATA_VERSION#
+
+# Clone github repository  
+RUN git clone "https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git" /workspace 
+
+# Set workspace 
+WORKDIR /workspace 
+
+# Checkout model version 
+RUN git checkout ${GITHUB_RELEASE}
+
+# Run model during container start 
+ENTRYPOINT ["/bin/bash", "-c", "gams model.gms gdx=output"]
+
