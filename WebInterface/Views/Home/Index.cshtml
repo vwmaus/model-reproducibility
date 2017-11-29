@@ -3,8 +3,7 @@
     ViewBag.Title = "Reproducibility Web-Interface";
 }
 
-@model WebInterface.Models.UserConfiguration
-
+@model UserConfiguration
 
 <div>
     <h1>IRT - IIASA Reproducibility Tool</h1>
@@ -25,16 +24,9 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(m => m.ProgramVersion, "Program Version")
-            @Html.ValidationMessageFor(m => m.ProgramVersion)
-            @Html.DropDownListFor(m => m.ProgramVersion,
-                new List<SelectListItem>
-                {
-                    new SelectListItem{ Text="1.0", Value = "1.0" },
-                    new SelectListItem{ Text="2.0", Value = "2.0" },
-                    new SelectListItem{ Text="3.0", Value = "3.0" }
-                },
-                new { @class = "form-control", @id = "programVersion" })
+            @Html.LabelFor(m => m.SelectedProgramVersion, "Program Version")
+            @Html.ValidationMessageFor(m => m.SelectedProgramVersion)
+            @Html.DropDownListFor(m => m.SelectedProgramVersion, Model.ProgramVersions, new { @class = "form-control", @id = "programVersion" })
         </div>
 
         <div class="form-group">
@@ -56,26 +48,28 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(m => m.Model, "Model / Script")
-            @Html.ValidationMessageFor(m => m.Model)
-            @Html.DropDownListFor(m => m.Model,
-                new List<SelectListItem>
-                {
-                    //new SelectListItem{ Text="transport-model", Value = "1" }
-                },
-                new { @class = "form-control", @id = "model" })
+            @Html.LabelFor(m => m.SelectedGithubRepository, "Model / Script")
+            @Html.ValidationMessageFor(m => m.SelectedGithubRepository)
+            @Html.DropDownListFor(m => m.SelectedGithubRepository, Model.GithubRepositories, new { @class = "form-control", @id = "model" })
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(m => m.ModelVersion, "Model Version")
-            @Html.ValidationMessageFor(m => m.ModelVersion)
-            @Html.DropDownListFor(m => m.ModelVersion,
-                new List<SelectListItem>
-                {
-                    //new SelectListItem{ Text="1.0", Value = "1" }
-                },
-                new { @class = "form-control", @id = "modelversion" })
+            @Html.LabelFor(m => m.SelectedGithubRepositoryVersion, "Model Version")
+            @Html.ValidationMessageFor(m => m.SelectedGithubRepositoryVersion)
+            @Html.DropDownListFor(m => m.SelectedGithubRepositoryVersion, Model.GithubRepositoryVersions, new { @class = "form-control", @id = "modelversion" })
         </div>
+
+        <div class="form-group">
+            @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
+            @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
+            @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
+        </div>
+
+        @*<div class="form-group">
+            @Html.LabelFor(m => m.GeonodeModelTag, "Geonode Model Tag")
+            @Html.ValidationMessageFor(m => m.GeonodeModelTag)
+            @Html.DropDownListFor(m => m.GeonodeModelTag, (IEnumerable<SelectListItem>)ViewBag.geonodeDocumentTags, new { @class = "form-control", @id = "genodelModelTag" })
+        </div>*@
 
         <div class="form-group">
             @Html.LabelFor(m => m.LicencePath, "Licence Path")
@@ -100,14 +94,19 @@
         <br />
 
         <div class="form-group">
-                <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
+            <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
         </div>
 
         <div class="form-group">
-                <input type="submit" value="Run Script" class="btn btn-default" asp-action="RunScript" asp-controller="Home"/>
+            <a id="btn_downloadGeonodeData" class="btn btn-default">Download Geonode File</a>
         </div>
 
+        <div class="form-group">
+            <input type="submit" value="Run Script" class="btn btn-default" asp-action="RunScript" asp-controller="Home"/>
+        </div>
 
         Html.EndForm();
     }
+    
+    <div id="downloadSection"></div>
 </div>

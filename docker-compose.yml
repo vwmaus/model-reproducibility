@@ -3,6 +3,14 @@ version: '3'
 services:
   webinterface:
     image: webinterface
+    container_name: webinterface
     build:
       context: ./WebInterface
       dockerfile: Dockerfile
+    external_links:
+      - geonode_geonode_1
+
+networks:
+  default:
+    external: 
+      name: geonode_default
