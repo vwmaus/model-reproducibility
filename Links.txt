@@ -2,3 +2,6 @@
 Gitversion / Tags - Request
 https://developer.github.com/v3/git/tags/
 https://developer.github.com/webhooks/
+
+
+https://github.com/dustinmoris/DustedCodes/blob/master/DustedCodes.Blog/App_Data/Articles/building-and-shipping-a-dotnet-core-application-with-docker-and-travisci.md
