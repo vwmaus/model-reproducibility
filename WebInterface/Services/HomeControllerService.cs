@@ -1,19 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using WebInterface.Classes;
-using WebInterface.Models;
-
-namespace WebInterface.Services
+﻿namespace WebInterface.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.IO.Compression;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Mvc;
+    using WebInterface.Classes;
+    using WebInterface.Models;
+    using System.Net;
+    using Newtonsoft.Json;
+
     public class HomeControllerService : ControllerBase
     {
+        public new string User => "User" + new Random().Next();
+
         public const string TemplatePath = "./Docker-Templates/";
 
         public string GamsDockerfilePath { get; set; }
@@ -74,7 +76,7 @@ namespace WebInterface.Services
         {
             Debug.WriteLine("Create Model Dockerfile");
 
-            const string modelPlaceholder = "#MODEL'";
+            const string modelPlaceholder = "#MODEL#";
             const string modelversionPlaceholder = "#MODEL_VERSION#";
 
             string dockerfileContent;
@@ -86,19 +88,19 @@ namespace WebInterface.Services
                 dockerfileContent = reader.ReadToEnd();
             }
 
-            if (userConfiguration.ModelVersion.IsNullOrEmpty())
+            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
             {
                 throw new Exception("Version must not be null or empty!");
             }
 
-            if (userConfiguration.Model.IsNullOrEmpty())
+            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
             {
                 throw new Exception("Model must not be null or empty!");
             }
 
             dockerfileContent = dockerfileContent
-                .Replace(modelversionPlaceholder, userConfiguration.ModelVersion)
-                .Replace(modelPlaceholder, userConfiguration.Model);
+                .Replace(modelversionPlaceholder, userConfiguration.SelectedGithubRepositoryVersion)
+                .Replace(modelPlaceholder, userConfiguration.SelectedGithubRepository);
 
             if (string.IsNullOrEmpty(outputFolder))
             {
@@ -121,7 +123,7 @@ namespace WebInterface.Services
         public string CreateDockerZipFile()
         {
             const string filename = "dockerfiles.zip";
-            string outputfile = $@"./OutputZip/{filename}";
+            var outputfile = $@"./OutputZip/{filename}";
             const string inputPath = "./Output/";
 
             if (System.IO.File.Exists(outputfile))
@@ -141,6 +143,137 @@ namespace WebInterface.Services
 
             byte[] fileBytes = System.IO.File.ReadAllBytes(filepath);
             return File(fileBytes, "application/x-msdownload", downloadFilename);
+        }
+
+        public async Task<GeoNodeDocument> GetGeonodeData()
+        {
+            if (!(WebRequest.Create(@"http://geonode_geonode_1/api/documents/") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubRepository>> GetGithubRepositories(string user)
+        {
+            if (!(WebRequest.Create("https://api.github.com/users/" + user + "/repos") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubContent>> GetGithubRepoContents(string user, string repo)
+        {
+            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repo + "/contents") is HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubContent>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
+        }
+
+        public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
+        {
+            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags") is
+                HttpWebRequest request))
+            {
+                return null;
+            }
+
+            request.UserAgent = this.User;
+
+            try
+            {
+                var response = await request.GetResponseAsync().ConfigureAwait(false);
+
+                if (response == null)
+                {
+                    return null;
+                }
+
+                var reader = new StreamReader(response.GetResponseStream());
+                var responseData = reader.ReadToEnd();
+                var document = JsonConvert.DeserializeObject<List<GithubRepositoryVersion>>(responseData);
+
+                return document;
+            }
+            catch (Exception ex)
+            {
+                Debug.Write(ex);
+            }
+
+            return null;
         }
     }
 }
