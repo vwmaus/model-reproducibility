@@ -1,6 +1,4 @@
-﻿using Microsoft.IdentityModel.Protocols;
-
-namespace WebInterface.Services
+﻿namespace WebInterface.Services
 {
     using System;
     using System.Collections.Generic;
@@ -149,158 +147,70 @@ namespace WebInterface.Services
 
         public async Task<GeoNodeDocument> GetGeonodeData()
         {
-            if (!(WebRequest.Create(@"http://geonode_geonode_1/api/documents/") is HttpWebRequest request))
-            {
-                return null;
-            }
+            var url = "http://geonode_geonode_1/api/documents/";
+            return await this.GetWebRequestContent<GeoNodeDocument>(url);
+        }
 
-            request.UserAgent = this.User;
-
-            try
-            {
-                var response = await request.GetResponseAsync().ConfigureAwait(false);
-
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<GeoNodeDocument>(responseData);
-
-                return document;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-
-            return null;
+        public async Task<GeoNodeDocumentData> GetGeoNodeDocumentData(string documentId)
+        {
+            var url = "http://geonode_geonode_1/api/documents/" + documentId;
+            return await this.GetWebRequestContent<GeoNodeDocumentData>(url);
         }
 
         public async Task<List<GithubRepository>> GetGithubRepositories(string user)
         {
-            if (!(WebRequest.Create("https://api.github.com/users/" + user + "/repos") is HttpWebRequest request))
-            {
-                return null;
-            }
+            var url = "https://api.github.com/users/" + user + "/repos";
+            return await this.GetWebRequestContent<List<GithubRepository>>(url);
+        }
 
-            request.UserAgent = this.User;
-
-            try
-            {
-
-                var response = await request.GetResponseAsync().ConfigureAwait(false);
-
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<List<GithubRepository>>(responseData);
-
-                return document;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-
-            return null;
+        public async Task<DockerhubRepository> GetDockerhubRepositories(string user)
+        {
+            // https://hub.docker.com/v2/repositories/iiasa/
+            var url = "https://hub.docker.com/v2/repositories/" + user;
+            return await this.GetWebRequestContent<DockerhubRepository>(url);
         }
 
         public async Task<DockerhubRepositoryTags> GetDockerhubRepositoryTags(string user, string repo)
         {
             // https://hub.docker.com/v2/repositories/iiasa/gams/tags/
-            if (!(WebRequest.Create("https://hub.docker.com/v2/repositories/" + user + "/" + repo + "/tags") is HttpWebRequest request))
-            {
-                return null;
-            }
-
-            request.UserAgent = this.User;
-
-            try
-            {
-
-                var response = await request.GetResponseAsync().ConfigureAwait(false);
-
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<DockerhubRepositoryTags>(responseData);
-
-                return document;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-
-            return null;
+            var url = "https://hub.docker.com/v2/repositories/" + user + "/" + repo + "/tags";
+            return await this.GetWebRequestContent<DockerhubRepositoryTags>(url);
         }
 
         public async Task<List<GithubContent>> GetGithubRepoContents(string user, string repo)
         {
-            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repo + "/contents") is HttpWebRequest request))
-            {
-                return null;
-            }
-
-            request.UserAgent = this.User;
-
-            try
-            {
-
-                var response = await request.GetResponseAsync().ConfigureAwait(false);
-
-                if (response == null)
-                {
-                    return null;
-                }
-
-                var reader = new StreamReader(response.GetResponseStream());
-                var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<List<GithubContent>>(responseData);
-
-                return document;
-            }
-            catch (Exception ex)
-            {
-                Debug.Write(ex);
-            }
-
-            return null;
+            var url = "https://api.github.com/repos/" + user + "/" + repo + "/contents";
+            return await this.GetWebRequestContent<List<GithubContent>>(url);
         }
 
         public async Task<List<GithubRepositoryVersion>> GetGithubRepoVersions(string user, string repository)
         {
-            if (!(WebRequest.Create("https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags") is
-                HttpWebRequest request))
+            var url = "https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags";
+            return await this.GetWebRequestContent<List<GithubRepositoryVersion>>(url);
+        }
+
+        public async Task<T> GetWebRequestContent<T>(string url)
+        {
+            if (!(WebRequest.Create(url) is HttpWebRequest request))
             {
-                return null;
+                return default(T);
             }
 
             request.UserAgent = this.User;
 
             try
             {
+
                 var response = await request.GetResponseAsync().ConfigureAwait(false);
 
                 if (response == null)
                 {
-                    return null;
+                    return default(T);
                 }
 
                 var reader = new StreamReader(response.GetResponseStream());
                 var responseData = reader.ReadToEnd();
-                var document = JsonConvert.DeserializeObject<List<GithubRepositoryVersion>>(responseData);
+                var document = JsonConvert.DeserializeObject<T>(responseData);
 
                 return document;
             }
@@ -309,7 +219,7 @@ namespace WebInterface.Services
                 Debug.Write(ex);
             }
 
-            return null;
+            return default(T);
         }
     }
 }

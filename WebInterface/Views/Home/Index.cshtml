@@ -13,14 +13,9 @@
         Html.BeginForm(new { @class = "form-horizontal", role = "form", method="post"});
 
         <div class="form-group">
-            @Html.LabelFor(m => m.Program, "Program")
-            @Html.ValidationMessageFor(m => m.Program)
-            @Html.DropDownListFor(m => m.Program,
-                new List<SelectListItem>
-                {
-                    new SelectListItem{ Text="Gams", Value = "Gams" }
-                },
-                new { @class = "form-control", @id = "program" })
+            @Html.LabelFor(m => m.SelectedProgram, "Program")
+            @Html.ValidationMessageFor(m => m.SelectedProgram)
+            @Html.DropDownListFor(m => m.SelectedProgram, Model.Programs, new { @class = "form-control", @id = "program" })
         </div>
 
         <div class="form-group">
@@ -29,7 +24,7 @@
             @Html.DropDownListFor(m => m.SelectedProgramVersion, Model.ProgramVersions, new { @class = "form-control", @id = "programVersion" })
         </div>
 
-        <div class="form-group">
+        @*<div class="form-group">
             @Html.LabelFor(m => m.ProgramArchitecture, "Program Architecture")
             @Html.ValidationMessageFor(m => m.ProgramArchitecture)
             @Html.DropDownListFor(m => m.ProgramArchitecture,
@@ -39,7 +34,7 @@
                     new SelectListItem{ Text="x86 (32 bit)", Value = Architectures.x86_32.ToString() }
                 },
                 new { @class = "form-control", @id = "programArchitecture" })
-        </div>
+        </div>*@
 
         <div class="form-group">
             @Html.LabelFor(m => m.GitHubUser, "GitHub User ID")
@@ -48,13 +43,13 @@
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(m => m.SelectedGithubRepository, "Model / Script")
+            @Html.LabelFor(m => m.SelectedGithubRepository, "Github Model / Script")
             @Html.ValidationMessageFor(m => m.SelectedGithubRepository)
             @Html.DropDownListFor(m => m.SelectedGithubRepository, Model.GithubRepositories, new { @class = "form-control", @id = "model" })
         </div>
 
         <div class="form-group">
-            @Html.LabelFor(m => m.SelectedGithubRepositoryVersion, "Model Version")
+            @Html.LabelFor(m => m.SelectedGithubRepositoryVersion, "Github Model Version / Tag")
             @Html.ValidationMessageFor(m => m.SelectedGithubRepositoryVersion)
             @Html.DropDownListFor(m => m.SelectedGithubRepositoryVersion, Model.GithubRepositoryVersions, new { @class = "form-control", @id = "modelversion" })
         </div>
@@ -65,11 +60,11 @@
             @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
         </div>
 
-        @*<div class="form-group">
-            @Html.LabelFor(m => m.GeonodeModelTag, "Geonode Model Tag")
-            @Html.ValidationMessageFor(m => m.GeonodeModelTag)
-            @Html.DropDownListFor(m => m.GeonodeModelTag, (IEnumerable<SelectListItem>)ViewBag.geonodeDocumentTags, new { @class = "form-control", @id = "genodelModelTag" })
-        </div>*@
+        <div class="form-group">
+            @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
+            @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
+            @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
+        </div>
 
         <div class="form-group">
             @Html.LabelFor(m => m.LicencePath, "Licence Path")

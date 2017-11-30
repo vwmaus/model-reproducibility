@@ -44,7 +44,7 @@ namespace WebInterface.Controllers
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.SelectedProgramVersion, config.ProgramArchitecture, config.LicencePath);
+            hs.CreateGamsDockerfile(config.SelectedProgramVersion, "x64", config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             var dlFile = hs.CreateDockerZipFile();
@@ -71,7 +71,8 @@ namespace WebInterface.Controllers
             }
 
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.SelectedProgramVersion, config.ProgramArchitecture, config.LicencePath);
+            // Todo: change x64 -> parse from program version of form
+            hs.CreateGamsDockerfile(config.SelectedProgramVersion, "x64", config.LicencePath);
             hs.CreateModelDockerfile(config);
 
             // docker compose yml
@@ -121,70 +122,70 @@ namespace WebInterface.Controllers
                     })
                         .ToList();
                 }
-            }
 
-            // TODO: Get GeoNode Document Tags
-            //var geoNodeDocumentTags = 
-            //var geonodeDocumentTagList = geoNodeDocumentTags.Select(document => new SelectListItem
-            //    {
-            //        Value = document.Title,
-            //        Text = document.Title
-            //    })
-            //    .ToList();
-
-            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
-            if (userConfig.GithubRepositories.Count == 0)
-            {
-                var repositories = await homeControllerService.GetGithubRepositories(userConfig.GitHubUser);
-                if (repositories != null)
+                if (string.IsNullOrEmpty(userConfig.SelectedGeoNodeDocument))
                 {
-                    userConfig.GithubRepositories = repositories.Select(repository => new SelectListItem
-                    {
-                        Value = repository.Name,
-                        Text = repository.Name
-                    })
-                        .ToList();
+                    userConfig.SelectedGeoNodeDocument = geoNodeDocuments?.Documents.First().Title;
+                }
 
-                    if (string.IsNullOrEmpty(userConfig.SelectedGithubRepository))
-                    {
-                        userConfig.SelectedGithubRepository = repositories.First().Name;
-                    }
-
-                    var repositoryVersions =
-                        await homeControllerService.GetGithubRepoVersions(userConfig.GitHubUser,
-                            userConfig.SelectedGithubRepository);
-                    if (repositoryVersions != null)
-                    {
-                        userConfig.GithubRepositoryVersions = repositoryVersions.Select(version => new SelectListItem
+                var geoNodeDocumentData = await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
+                if (geoNodeDocumentData != null)
+                {
+                    userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
                         {
-                            Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                            Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-                        })
-                            .ToList();
-                    }
+                            Value = keyword.ToString(),
+                            Text = keyword.ToString()
+                        }
+                    ).ToList();
                 }
             }
 
-            if (userConfig.ProgramVersions.Count != 0)
+            // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
+            var repositories = await homeControllerService.GetGithubRepositories(userConfig.GitHubUser);
+            if (repositories != null)
             {
-                return userConfig;
+                userConfig.GithubRepositories = repositories.Select(repository => new SelectListItem
+                {
+                    Value = repository.Name,
+                    Text = repository.Name
+                })
+                    .ToList();
+
+                if (string.IsNullOrEmpty(userConfig.SelectedGithubRepository))
+                {
+                    userConfig.SelectedGithubRepository = repositories.First().Name;
+                }
+
+                var repositoryVersions =
+                    await homeControllerService.GetGithubRepoVersions(userConfig.GitHubUser,
+                        userConfig.SelectedGithubRepository);
+                if (repositoryVersions != null)
+                {
+                    userConfig.GithubRepositoryVersions = repositoryVersions.Select(version => new SelectListItem
+                    {
+                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                    })
+                        .ToList();
+                }
             }
 
-            //var programVersions = await homeControllerService.GetGithubRepoContents(userConfig.GitHubUser, programRepo);
-            var programVersions = await homeControllerService.GetDockerhubRepositoryTags(userConfig.DockerhubUser, userConfig.DockerhubProgramRepository);
+            var programs = await homeControllerService.GetDockerhubRepositories(userConfig.DockerhubUser);
+
+            userConfig.Programs = programs.Results.OrderByDescending(x => x.Name).Select(program => new SelectListItem
+            {
+                Value = program.Name,
+                Text = program.Name
+            })
+                .ToList();
+
+            var programVersions = await homeControllerService.GetDockerhubRepositoryTags(userConfig.DockerhubUser,
+                userConfig.DockerhubProgramRepository);
 
             if (programVersions == null)
             {
                 return userConfig;
             }
-
-            //programVersions = programVersions.Where(x => x.Type == "dir").ToList();
-            //userConfig.ProgramVersions = programVersions.Select(version => new SelectListItem
-            //{
-            //    Value = version.Name,
-            //    Text = version.Name
-            //})
-            //    .ToList();
 
             userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version => new SelectListItem
             {
