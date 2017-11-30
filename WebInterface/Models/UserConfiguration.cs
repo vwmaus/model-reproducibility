@@ -26,18 +26,22 @@
         [Required(ErrorMessage = "The program version is required.")]
         public string SelectedProgramVersion { get; set; }
 
+        public List<SelectListItem> GeonodeModelTags { get; set; }
+
         //[Required(ErrorMessage = "The geonode model tag is required.")]
-        //public string GeonodeModelTag { get; set; }
+        public string SelectedGeonodeModelTag { get; set; }
+
+        public List<SelectListItem> Programs { get; set; }
+
+        [Required(ErrorMessage = "The program is required.")]
+        public string SelectedProgram { get; set; }
 
         // --------------------------------------------------------------
 
         public string LicencePath { get; set; }
 
-        [Required(ErrorMessage = "The program is required.")]
-        public string Program { get; set; }
-
-        [Required(ErrorMessage = "The program architecture is required.")]
-        public string ProgramArchitecture { get; set; }
+        //[Required(ErrorMessage = "The program architecture is required.")]
+        //public string ProgramArchitecture { get; set; }
 
         private string githubUser;
 
@@ -75,13 +79,15 @@
             this.GeoNodeDocuments = new List<SelectListItem>();
             this.GithubRepositoryVersions = new List<SelectListItem>();
             this.ProgramVersions = new List<SelectListItem>();
+            this.Programs = new List<SelectListItem>();
+            this.GeonodeModelTags = new List<SelectListItem>();
 
             this.LicencePath = string.Empty;
-            this.Program = string.Empty;
             this.SelectedProgramVersion = string.Empty;
             this.SelectedGeoNodeDocument = string.Empty;
             this.SelectedGithubRepository = string.Empty;
             this.SelectedGithubRepositoryVersion = string.Empty;
+            this.SelectedProgram = string.Empty;
             //this.GeonodeModelTag = string.Empty;
 
             this.GitHubUser = string.Empty;
