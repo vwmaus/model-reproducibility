@@ -41,10 +41,26 @@
 
         private string githubUser;
 
+        private string dockerhubUser;
+
+        private string dockerhubProgramRepository;
+
         public string GitHubUser
         {
             get => string.IsNullOrEmpty(this.githubUser) ? "vwmaus" : this.githubUser;
             set => this.githubUser = value;
+        }
+
+        public string DockerhubUser
+        {
+            get => string.IsNullOrEmpty(this.dockerhubUser) ? "iiasa" : this.dockerhubUser;
+            set => this.dockerhubUser = value;
+        }
+
+        public string DockerhubProgramRepository
+        {
+            get => string.IsNullOrEmpty(this.dockerhubProgramRepository) ? "gams" : this.dockerhubProgramRepository;
+            set => this.dockerhubProgramRepository = value;
         }
 
         public bool SaveToDatabase { get; set; }
@@ -69,6 +85,7 @@
             //this.GeonodeModelTag = string.Empty;
 
             this.GitHubUser = string.Empty;
+            this.DockerhubUser = string.Empty;
             this.SaveToDatabase = false;
             this.DownloadResult = false;
         }

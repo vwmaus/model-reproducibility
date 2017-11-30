@@ -21,5 +21,9 @@
         public static GithubContent[] GithubContentFromJson(string json) => JsonConvert.DeserializeObject<GithubContent[]>(json, Converter.Settings);
 
         public static string GithubContentToJson(this GithubContent[] self) => JsonConvert.SerializeObject(self, Converter.Settings);
+
+        public static DockerhubRepositoryTags DockerhubRepositoryTagsFromJson(string json) => JsonConvert.DeserializeObject<DockerhubRepositoryTags>(json, Converter.Settings);
+
+        public static string DockerhubRepositoryTagsToJson(this DockerhubRepositoryTags self) => JsonConvert.SerializeObject(self, Converter.Settings);
     }
 }
