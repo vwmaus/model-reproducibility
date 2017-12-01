@@ -25,5 +25,13 @@
         public static DockerhubRepositoryTags DockerhubRepositoryTagsFromJson(string json) => JsonConvert.DeserializeObject<DockerhubRepositoryTags>(json, Converter.Settings);
 
         public static string DockerhubRepositoryTagsToJson(this DockerhubRepositoryTags self) => JsonConvert.SerializeObject(self, Converter.Settings);
+
+        public static DockerhubRepository DockerhubRepositoryFromJson(string json) => JsonConvert.DeserializeObject<DockerhubRepository>(json, Converter.Settings);
+
+        public static string DockerhubRepositoryToJson(this DockerhubRepository self) => JsonConvert.SerializeObject(self, Converter.Settings);
+
+        public static GeoNodeDocumentData GeoNodeDocumentDataFromJson(string json) => JsonConvert.DeserializeObject<GeoNodeDocumentData>(json, Converter.Settings);
+
+        public static string GeoNodeDocumentDataToJson(this GeoNodeDocumentData self) => JsonConvert.SerializeObject(self, Converter.Settings);
     }
 }
