@@ -12543,11 +12543,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "D:\\GitRepo\\Mode-Reproducibility-Webpage\\WebInterface\\WebInterface.csproj",
+      "projectUniqueName": "C:\\Users\\peter\\Documents\\Source\\model-reproducibility\\WebInterface\\WebInterface.csproj",
       "projectName": "WebInterface",
-      "projectPath": "D:\\GitRepo\\Mode-Reproducibility-Webpage\\WebInterface\\WebInterface.csproj",
+      "projectPath": "C:\\Users\\peter\\Documents\\Source\\model-reproducibility\\WebInterface\\WebInterface.csproj",
       "packagesPath": "C:\\Users\\peter\\.nuget\\packages\\",
-      "outputPath": "D:\\GitRepo\\Mode-Reproducibility-Webpage\\WebInterface\\obj\\",
+      "outputPath": "C:\\Users\\peter\\Documents\\Source\\model-reproducibility\\WebInterface\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -12579,7 +12579,7 @@
         "dependencies": {
           "Microsoft.NETCore.App": {
             "target": "Package",
-            "version": "2.0",
+            "version": "2.0.0",
             "autoReferenced": true
           },
           "Microsoft.AspNetCore.All": {

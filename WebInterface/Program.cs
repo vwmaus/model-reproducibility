@@ -7,9 +7,6 @@
     {
         public static void Main(string[] args)
         {
-            //HomeControllerService s = new HomeControllerService();
-            //s.CreateGamsDockerfile(@"C:\Temp\gamslic.txt");
-
             BuildWebHost(args).Run();
         }
 
