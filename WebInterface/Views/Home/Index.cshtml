@@ -87,13 +87,20 @@
         </div>
 
         <br />
+        <div id="downloadSection">
+            <div class="form-group">
+                <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
+            </div>
+            
+            <div class="form-group">
+                <a id="btn_downloadGeonodeData" class="btn btn-default">Download Geonode File</a>
+            </div>
+            
 
-        <div class="form-group">
-            <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home"/>
         </div>
 
         <div class="form-group">
-            <a id="btn_downloadGeonodeData" class="btn btn-default">Download Geonode File</a>
+            <a id="btn_buildImage" class="btn btn-default">Build Image</a>
         </div>
 
         <div class="form-group">
@@ -102,6 +109,5 @@
 
         Html.EndForm();
     }
-    
-    <div id="downloadSection"></div>
+
 </div>
