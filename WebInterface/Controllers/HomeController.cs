@@ -1,4 +1,7 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
+﻿using System;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Microsoft.AspNetCore.Hosting;
+using WebInterface.Classes;
 
 namespace WebInterface.Controllers
 {
@@ -11,9 +14,17 @@ namespace WebInterface.Controllers
     using WebInterface.Services;
     using System.Linq;
     using Microsoft.AspNetCore.Mvc.Rendering;
+    using Microsoft.AspNetCore.Hosting.Internal;
 
     public class HomeController : Controller
     {
+        private readonly IHostingEnvironment hostingEnvironment;
+
+        public HomeController(IHostingEnvironment environment)
+        {
+            hostingEnvironment = environment;
+        }
+
         public List<GithubRepository> GithubRepositories { get; set; }
 
         public async Task<IActionResult> Index()
@@ -41,11 +52,23 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
+        public IActionResult UploadLicence(UserConfiguration config)
+        {
+            this.UploadFile(config);
+
+            return RedirectToAction("Index", config);
+            //return View("Index", config);
+        }
+
+        [HttpPost]
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
-            hs.CreateGamsDockerfile(config.SelectedProgramVersion, "x64", config.LicencePath);
-            hs.CreateModelDockerfile(config);
+
+            this.UploadFile(config);
+
+            hs.CreateGamsDockerfile(config);
+            //hs.CreateModelDockerfile(config);
 
             var dlFile = hs.CreateDockerZipFile();
 
@@ -65,20 +88,17 @@ namespace WebInterface.Controllers
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
             // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
 
-            /*
-             
-
-             */
-
             if (!this.ModelState.IsValid)
             {
                 return this.View("Index", config);
             }
 
+            this.UploadFile(config);
+
             var hs = new HomeControllerService();
             // Todo: change x64 -> parse from program version of form
-            hs.CreateGamsDockerfile(config.SelectedProgramVersion, "x64", config.LicencePath);
-            hs.CreateModelDockerfile(config);
+            hs.CreateGamsDockerfile(config);
+            //hs.CreateModelDockerfile(config);
 
             // docker compose yml
 
@@ -104,6 +124,47 @@ namespace WebInterface.Controllers
             // build docker image of model
 
             return this.View("Index", config);
+        }
+
+        public async void UploadFile(UserConfiguration config)
+        {
+            //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
+            if (config.File != null)
+            {
+                var uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+
+                config.FileName = "gams_licence";//config.File.FileName;
+                var filePath = Path.Combine(uploads, config.FileName);
+
+                if (config.File.Length > 0)
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await config.File.CopyToAsync(stream);
+                    }
+                }
+
+                //config.File.CopyTo(new FileStream(filePath, FileMode.Create));
+            }
+        }
+
+        public static void Copy(string inputFilePath, string outputFilePath)
+        {
+            int bufferSize = 1024 * 1024;
+
+            using (FileStream fileStream = new FileStream(outputFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+                //using (FileStream fs = File.Open(<file-path>, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                FileStream fs = new FileStream(inputFilePath, FileMode.Open, FileAccess.ReadWrite);
+                fileStream.SetLength(fs.Length);
+                int bytesRead = -1;
+                byte[] bytes = new byte[bufferSize];
+
+                while ((bytesRead = fs.Read(bytes, 0, bufferSize)) > 0)
+                {
+                    fileStream.Write(bytes, 0, bytesRead);
+                }
+            }
         }
 
         public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")
@@ -164,14 +225,31 @@ namespace WebInterface.Controllers
                 var repositoryVersions =
                     await homeControllerService.GetGithubRepoVersions(userConfig.GitHubUser,
                         userConfig.SelectedGithubRepository);
+
+                var repositoryBranches =
+                    await homeControllerService.GetGithubBranches(userConfig.GitHubUser,
+                        userConfig.SelectedGithubRepository);
+
+                if (repositoryBranches != null)
+                {
+                    userConfig.GithubRepositoryBranches = repositoryBranches.Select(branch => new SelectListItem
+                        {
+                            Value = branch.Name, //+ " " + "GithubBranch",
+                            Text = branch.Name,
+                        })
+                        .ToList();
+                }
+
                 if (repositoryVersions != null)
                 {
-                    userConfig.GithubRepositoryVersions = repositoryVersions.Select(version => new SelectListItem
-                    {
-                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-                    })
-                        .ToList();
+                    userConfig.GithubRepositoryVersions.Clear();
+                    userConfig.GithubRepositoryVersions.AddRange(userConfig.GithubRepositoryBranches);
+                    userConfig.GithubRepositoryVersions.AddRange(repositoryVersions.Select(version => new SelectListItem
+                        {
+                            Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                            Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                        })
+                        .ToList());
                 }
             }
 

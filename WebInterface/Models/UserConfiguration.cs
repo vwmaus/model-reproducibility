@@ -1,4 +1,6 @@
-﻿namespace WebInterface.Models
+﻿using Microsoft.AspNetCore.Http;
+
+namespace WebInterface.Models
 {
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
@@ -6,6 +8,10 @@
 
     public class UserConfiguration
     {
+        public IFormFile File { set; get; }
+
+        public string FileName { get; set; }
+
         public List<SelectListItem> GithubRepositories { get; set; }
 
         [Required(ErrorMessage = "The model is required.")]
@@ -17,6 +23,8 @@
         public string SelectedGeoNodeDocument { get; set; }
 
         public List<SelectListItem> GithubRepositoryVersions { get; set; }
+
+        public List<SelectListItem> GithubRepositoryBranches { get; set; }
 
         [Required(ErrorMessage = "The model version is required.")]
         public string SelectedGithubRepositoryVersion { get; set; }
@@ -78,6 +86,7 @@
             this.GithubRepositories = new List<SelectListItem>();
             this.GeoNodeDocuments = new List<SelectListItem>();
             this.GithubRepositoryVersions = new List<SelectListItem>();
+            this.GithubRepositoryBranches = new List<SelectListItem>();
             this.ProgramVersions = new List<SelectListItem>();
             this.Programs = new List<SelectListItem>();
             this.GeonodeModelTags = new List<SelectListItem>();
