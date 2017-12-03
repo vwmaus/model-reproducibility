@@ -56,7 +56,7 @@ namespace WebInterface.Controllers
         public IActionResult DownDownloadGeonodeFile(string id)
         {
             var hs = new HomeControllerService();
-            return hs.DownloadFile("http://localhost:8011/documents/34/download", "dockerfile.zip");
+            return hs.DownloadFile($@"http://localhost:8011/documents/{id}/download", "geonode.zip");
         }
 
         [HttpPost]
@@ -64,6 +64,11 @@ namespace WebInterface.Controllers
         {
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
             // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
+
+            /*
+             
+
+             */
 
             if (!this.ModelState.IsValid)
             {
