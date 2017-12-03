@@ -282,7 +282,7 @@ function addDownloadButton() {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function () {
-    $("#btn_runScript").click(runScript);
+    //$("#btn_runScript").click(runScript);
 
     $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
 
@@ -303,7 +303,7 @@ $(document).ready(function () {
     });
 
     $("#geonodeModelData").change(function() {
-        $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
+        //$("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
     });
 
     $("#githubUser").change(function () {
