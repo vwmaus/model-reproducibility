@@ -15,6 +15,7 @@ namespace WebInterface.Controllers
     using System.Linq;
     using Microsoft.AspNetCore.Mvc.Rendering;
     using Microsoft.AspNetCore.Hosting.Internal;
+    using Microsoft.AspNetCore.Hosting.Server;
 
     public class HomeController : Controller
     {
@@ -56,7 +57,7 @@ namespace WebInterface.Controllers
         {
             this.UploadFile(config);
 
-            return RedirectToAction("Index", config);
+            return this.RedirectToAction("Index", config);
             //return View("Index", config);
         }
 
@@ -76,7 +77,7 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        public IActionResult DownDownloadGeonodeFile(string id)
+        public IActionResult DownloadGeonodeFile(string id)
         {
             var hs = new HomeControllerService();
             return hs.DownloadFile($@"http://localhost:8011/documents/{id}/download", "geonode.zip");
@@ -131,7 +132,12 @@ namespace WebInterface.Controllers
             //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
             if (config.File != null)
             {
-                var uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+                var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads");
+
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+                }
 
                 config.FileName = "gams_licence";//config.File.FileName;
                 var filePath = Path.Combine(uploads, config.FileName);
@@ -143,28 +149,64 @@ namespace WebInterface.Controllers
                         await config.File.CopyToAsync(stream);
                     }
                 }
-
-                //config.File.CopyTo(new FileStream(filePath, FileMode.Create));
             }
         }
 
-        public static void Copy(string inputFilePath, string outputFilePath)
+        public IActionResult BuildImage(UserConfiguration config, string imageName = "")
         {
-            int bufferSize = 1024 * 1024;
+            // https://docs.docker.com/engine/reference/builder/
 
-            using (FileStream fileStream = new FileStream(outputFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
-                //using (FileStream fs = File.Open(<file-path>, FileMode.Open, FileAccess.Read, FileShare.Read))
+            HomeControllerService hs = new HomeControllerService();
+
+            hs.CreateGamsDockerfile(config);
+
+            if (imageName == string.Empty)
             {
-                FileStream fs = new FileStream(inputFilePath, FileMode.Open, FileAccess.ReadWrite);
-                fileStream.SetLength(fs.Length);
-                int bytesRead = -1;
-                byte[] bytes = new byte[bufferSize];
-
-                while ((bytesRead = fs.Read(bytes, 0, bufferSize)) > 0)
-                {
-                    fileStream.Write(bytes, 0, bytesRead);
-                }
+                imageName = config.SelectedProgram + config.SelectedGithubRepository +
+                            DateTime.Now.ToShortDateString().Replace(".", string.Empty);
             }
+
+            imageName = imageName.ToLower() + Guid.NewGuid().ToString().Substring(0, 4);
+
+            var outputPath = Path.GetFullPath("./Output/");
+
+            var files = Directory.GetFiles(outputPath);
+
+            var dockerfile = Path.GetFileName(files.FirstOrDefault(file => file.ToLower().Contains("docker")));
+
+            if (!string.IsNullOrEmpty(dockerfile))
+            {
+                var process = new Process();
+                var startInfo = new ProcessStartInfo
+                {
+                    //WindowStyle = ProcessWindowStyle.Hidden,
+                    FileName = "/bin/bash",
+                    Arguments = "docker help",//$@"docker build -t webinterface/{imageName} - < /app/Output/{dockerfile}",
+                    //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
+                    RedirectStandardOutput = true
+                };
+                
+                process.StartInfo = startInfo;
+                process.Start(); // no such file or directory
+
+                //process.OutputDataReceived += this.Process_OutputDataReceived;
+
+                Debug.WriteLine(process.StandardOutput.ReadToEnd());
+
+                process.WaitForExit();
+            }
+
+            return this.View("Index", config);
+
+            // Todo: Get user info: dockerfile not available
+        }
+
+        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+
+            var output = e.Data;
+
+            Debug.WriteLine(output);
         }
 
         public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")

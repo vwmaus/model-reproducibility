@@ -2,10 +2,10 @@ FROM iiasa/gams:latest
 MAINTAINER "Victor Maus" maus@iiasa.ac.at
 
 # Get github repository from web inteface
-ENV GITHUB_USER=vwmaus
+ENV GITHUB_USER=ptrkrnstnr
 
 # Get github repository from web interface 
-ENV GITHUB_REPO=Cmpl
+ENV GITHUB_REPO=transport-model
 
 # Get model version from web interface 
 ENV GITHUB_RELEASE=master
