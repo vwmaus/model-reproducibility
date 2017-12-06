@@ -8,3 +8,4 @@ https://github.com/dustinmoris/DustedCodes/blob/master/DustedCodes.Blog/App_Data
 
 // Run build image of VS2017 
 https://stackoverflow.com/questions/43708578/how-to-run-docker-image-produced-by-vs-2017
+https://stackoverflow.com/questions/46456021/dotnet-run-in-docker-container-results-in-inaccessible-url
