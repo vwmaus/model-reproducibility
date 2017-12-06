@@ -8,3 +8,4 @@ D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\obj\Release\netcoreapp2.0\W
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\obj\Release\netcoreapp2.0\WebInterface.AssemblyInfo.cs
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\obj\Release\netcoreapp2.0\WebInterface.dll
 D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\obj\Release\netcoreapp2.0\WebInterface.pdb
+D:\GitRepo\Mode-Reproducibility-Webpage\WebInterface\obj\Release\netcoreapp2.0\WebInterface.csprojResolveAssemblyReference.cache

@@ -181,7 +181,7 @@ namespace WebInterface.Controllers
                 {
                     //WindowStyle = ProcessWindowStyle.Hidden,
                     FileName = "/bin/bash",
-                    Arguments = "docker help",//$@"docker build -t webinterface/{imageName} - < /app/Output/{dockerfile}",
+                    Arguments = $@"docker build -t webinterface/{imageName} - < /app/Output/{dockerfile}",
                     //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
                     RedirectStandardOutput = true
                 };
