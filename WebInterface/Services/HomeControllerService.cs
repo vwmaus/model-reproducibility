@@ -22,37 +22,57 @@
 
         public string ModelDockerfilePath { get; set; }
 
-        public void CreateGamsDockerfile(string version, string architecture, string licencePath = null, string outputFolder = "")
+        public void CreateGamsDockerfile(UserConfiguration config, string outputFolder = "")
         {
+            if (config == null)
+            {
+                Debug.WriteLine("Config file is null");
+                return;
+            }
+
             Debug.WriteLine("Create Gams Dockerfile...");
 
-            const string licencePlaceholder = "#GAMS_LICENSE#";
-            const string bitArchitecturePlaceholder = "#BIT_ARC#";
+
             const string gamsVersionPlaceholder = "#GAMS_VERSION#";
+            const string githubUserPlaceholder = "#GITHUB_USER#";
+            const string modelPlaceholder = "#MODEL#";
+            const string modelVersionPlaceholder = "#MODEL_VERSION#";
+            const string geonodeDataVersionPlaceholder = "#DATA_VERSION#";
+
+            const string dockerFileName = "Dockerfile-model";
+
+            const string licencePlaceholder = "#GAMS_LICENSE#";
 
             string dockerfileContent;
 
-            const string dockerTemplate = TemplatePath + "gams-dockerfile";
+            const string dockerTemplate = TemplatePath + dockerFileName;
 
             using (var reader = new StreamReader(dockerTemplate))
             {
                 dockerfileContent = reader.ReadToEnd();
             }
 
-            if (string.IsNullOrEmpty(licencePath))
-            {
-                dockerfileContent = dockerfileContent.Replace(@"COPY ${GAMS_LICENSE} /opt/gams/gamslice.txt", "# No licence file found or entered!");
-            }
-            else
-            {
-                licencePath = licencePath.Replace(@"\", "/");
-
-                dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
-            }
-
             dockerfileContent = dockerfileContent
-                .Replace(bitArchitecturePlaceholder, architecture)
-                .Replace(gamsVersionPlaceholder, version);
+                .Replace(gamsVersionPlaceholder, config.SelectedProgramVersion)
+                .Replace(githubUserPlaceholder, config.GitHubUser)
+                .Replace(modelPlaceholder, config.SelectedGithubRepository)
+                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion)
+                .Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
+
+            //if (string.IsNullOrEmpty(licencePath))
+            //{
+            //    dockerfileContent = dockerfileContent.Replace(@"COPY ${GAMS_LICENSE} /opt/gams/gamslice.txt", "# No licence file found or entered!");
+            //}
+            //else
+            //{
+            //    licencePath = licencePath.Replace(@"\", "/");
+
+            //    dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
+            //}
+
+            //dockerfileContent = dockerfileContent
+            //    .Replace(bitArchitecturePlaceholder, architecture)
+            //    .Replace(gamsVersionPlaceholder, version);
 
             if (string.IsNullOrEmpty(outputFolder))
             {
@@ -64,7 +84,7 @@
                 Directory.CreateDirectory(outputFolder);
             }
 
-            var outputfile = Path.Combine(outputFolder, "gams-dockerfile");
+            var outputfile = Path.Combine(outputFolder, dockerFileName);
             System.IO.File.CreateText(outputfile);
 
             System.IO.File.WriteAllText(outputfile, dockerfileContent);
@@ -187,6 +207,12 @@
         {
             var url = "https://api.github.com/repos/" + user + "/" + repository + "/git/refs/tags";
             return await this.GetWebRequestContent<List<GithubRepositoryVersion>>(url);
+        }
+
+        public async Task<List<GithubBranch>> GetGithubBranches(string user, string repository)
+        {
+            var url = "https://api.github.com/repos/" + user + "/" + repository + "/branches";
+            return await this.GetWebRequestContent<List<GithubBranch>>(url);
         }
 
         public async Task<T> GetWebRequestContent<T>(string url)

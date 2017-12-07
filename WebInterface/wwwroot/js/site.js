@@ -5,36 +5,36 @@
 // ajax call controller action:
 // https://stackoverflow.com/questions/12559515/jquery-ajax-call-to-controller
 
-function runScript() {
-    window.alert("runScript");
-    addDownloadButton();
-    return false;
-}
+//function runScript() {
+//    window.alert("runScript");
+//    addDownloadButton();
+//    return false;
+//}
 
-function downloadDockerfiles() {
-    createDockerfiles();
-    return false;
-}
+//function downloadDockerfiles() {
+//    createDockerfiles();
+//    return false;
+//}
 
-function createDockerfiles() {
-    window.alert("createDockerfiles");
-}
+//function createDockerfiles() {
+//    window.alert("createDockerfiles");
+//}
 
-function createGamsDockerfile() {
-    var lic = $("#licencePath").val();
+//function createGamsDockerfile() {
+//    var lic = $("#licencePath").val();
 
-    $.ajax({
-        url: $("#btn_downloadDockerfile").attr("href"),
-        type: "POST",
-        data: {
-            licencePath: lic
-        }
-    }).done(function () {
-        alert("Dockerfile created");
-    });
+//    $.ajax({
+//        url: $("#btn_downloadDockerfile").attr("href"),
+//        type: "POST",
+//        data: {
+//            licencePath: lic
+//        }
+//    }).done(function () {
+//        alert("Dockerfile created");
+//    });
 
-    return false;
-}
+//    return false;
+//}
 
 function httpGet(theUrl) {
     var xmlHttp = new XMLHttpRequest();
@@ -72,6 +72,7 @@ function httpPost(theUrl) {
 
 function getGithubVersions(owner, repo) {
     var url = "https://api.github.com/repos/" + owner + "/" + repo + "/git/refs/tags";
+    var url2 = "https://api.github.com/repos/" + owner + "/" + repo + "/branches";
 
     function httpGetAsync(theUrl, callback) {
         var xmlHttp = new XMLHttpRequest();
@@ -105,6 +106,24 @@ function getGithubVersions(owner, repo) {
     DeleteModelVersionData();
 
     $.each(tags, function (val, text) {
+        $("#modelversion").append(
+            $("<option></option>").val(text).html(text)
+        );
+    });
+
+    res = httpGet(url2);
+    obj = JSON.parse(res);
+    branches = new Array();
+
+    if (Object.prototype.toString.call(obj) === "[object Array]") {
+        obj.forEach(function (entry) {
+            var branch = entry.name;
+            console.log(branch);
+            branches.push(branch);
+        });
+    }
+
+    $.each(branches, function (val, text) {
         $("#modelversion").append(
             $("<option></option>").val(text).html(text)
         );
@@ -269,6 +288,8 @@ function getGeoNodeModels() {
 }
 
 function getGeoNodeModelTags() {
+    //todo
+
 
     return false;
 }
@@ -282,7 +303,7 @@ function addDownloadButton() {
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 $(document).ready(function () {
-    $("#btn_runScript").click(runScript);
+    //$("#btn_runScript").click(runScript);
 
     $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
 
@@ -302,8 +323,10 @@ $(document).ready(function () {
         getGithubVersions(owner, repo);
     });
 
-    $("#geonodeModelData").change(function() {
+    $("#geonodeModelData").change(function () {
         $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
+        getGeoNodeModelTags();
+        //$("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
     });
 
     $("#githubUser").change(function () {
@@ -312,6 +335,6 @@ $(document).ready(function () {
         ReloadFormData();
     });
 
-    ReloadFormData();
+    //ReloadFormData();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////

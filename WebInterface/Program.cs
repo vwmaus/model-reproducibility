@@ -1,4 +1,8 @@
-﻿namespace WebInterface
+﻿using System;
+using System.Diagnostics;
+using System.IO;
+
+namespace WebInterface
 {
     using Microsoft.AspNetCore;
     using Microsoft.AspNetCore.Hosting;
@@ -7,9 +11,6 @@
     {
         public static void Main(string[] args)
         {
-            //HomeControllerService s = new HomeControllerService();
-            //s.CreateGamsDockerfile(@"C:\Temp\gamslic.txt");
-
             BuildWebHost(args).Run();
         }
 
