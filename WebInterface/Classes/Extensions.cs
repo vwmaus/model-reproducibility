@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +16,22 @@ namespace WebInterface.Classes
         public static bool IsNullOrEmpty(this string s)
         {
             return string.IsNullOrEmpty(s);
+        }
+
+        public static string GetUniqueName(this string fileName)
+        {
+            if (File.Exists(fileName))
+            {
+                fileName = Path.GetFileName(fileName);
+
+                return Path.GetFileNameWithoutExtension(fileName)
+                       + "_"
+                       + Guid.NewGuid().ToString().Substring(0, 4)
+                       + Path.GetExtension(fileName);
+            }
+
+            return fileName + "_"
+                   + Guid.NewGuid().ToString().Substring(0, 4);
         }
     }
 }

@@ -33,5 +33,9 @@
         public static GeoNodeDocumentData GeoNodeDocumentDataFromJson(string json) => JsonConvert.DeserializeObject<GeoNodeDocumentData>(json, Converter.Settings);
 
         public static string GeoNodeDocumentDataToJson(this GeoNodeDocumentData self) => JsonConvert.SerializeObject(self, Converter.Settings);
+
+        public static List<GithubBranch> GithubBranchFromJson(string json) => JsonConvert.DeserializeObject<List<GithubBranch>>(json, Converter.Settings);
+
+        public static string GithubBranchToJson(this List<GithubBranch> self) => JsonConvert.SerializeObject(self, Converter.Settings);
     }
 }
