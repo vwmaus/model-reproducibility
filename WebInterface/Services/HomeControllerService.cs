@@ -16,7 +16,7 @@
     {
         public new string User => "User" + new Random().Next();
 
-        public const string TemplatePath = "./Docker-Templates/";
+        public const string TemplatePath = "./docker_templates/";
 
         public string GamsDockerfilePath { get; set; }
 
