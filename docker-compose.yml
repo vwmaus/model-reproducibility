@@ -1,12 +1,22 @@
 version: '3'
 
 services:
-  webinterface:
-    image: webinterface
-    container_name: webinterface
+  
+  webinterface_sdk:
+    image: webinterface_sdk
+    container_name: webinterface_sdk
     build:
       context: ./WebInterface
       dockerfile: Dockerfile
+    volumes:
+      - webinterface_data:/app
+
+  webinterface:
+    image: microsoft/aspnetcore:2.0
+    volumes:
+      - webinterface_data:/app
+    working_dir: /app
+    entrypoint: /bin/bash -c "dotnet WebInterface.dll"
     external_links:
       - geonode_geonode_1
     ports:
@@ -16,3 +26,7 @@ networks:
   default:
     external: 
       name: geonode_default
+
+volumes:
+  webinterface_data:
+
