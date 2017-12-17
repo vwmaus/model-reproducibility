@@ -1,6 +1,14 @@
-FROM microsoft/dotnet:2.0.0-sdk
-WORKDIR /src
-COPY . /src
-RUN dotnet publish ./WebInterface.csproj -c Release -o /app
-RUN cp -r ./docker_templates /app/docker_templates
-EXPOSE 80 
+FROM microsoft/aspnetcore:2.0
+
+# Set Docker remote API address
+ENV DOCKER_REMOTE_API="unix:///var/run/docker.sock"
+
+ARG source
+
+WORKDIR /app
+
+EXPOSE 80
+
+COPY ${source:-obj/Docker/publish} .
+
+ENTRYPOINT ["dotnet", "WebInterface.dll"]

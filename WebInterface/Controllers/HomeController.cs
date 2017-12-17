@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using Docker.DotNet;
+using Docker.DotNet.Models;
 using Microsoft.AspNetCore.Hosting;
 using WebInterface.Classes;
+using WebInterface.Docker;
 
 namespace WebInterface.Controllers
 {
@@ -19,11 +23,13 @@ namespace WebInterface.Controllers
 
     public class HomeController : Controller
     {
+        public readonly DockerService DockerService;
+
         private readonly IHostingEnvironment hostingEnvironment;
 
-        public HomeController(IHostingEnvironment environment)
+        public HomeController(DockerService dockerService, IHostingEnvironment environment)
         {
-            hostingEnvironment = environment;
+            this.DockerService = dockerService;
         }
 
         public List<GithubRepository> GithubRepositories { get; set; }
@@ -31,6 +37,11 @@ namespace WebInterface.Controllers
         public async Task<IActionResult> Index()
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
+
+            List<ContainerModel> list = await this.DockerService.GetContainerList();
+
+            var icp = new ImagesCreateParameters();
+            var res = await this.DockerService.DockerClient.Images.CreateImageAsync(icp, new AuthConfig() { });
 
             return this.View(userConfig);
         }
@@ -84,7 +95,7 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        public IActionResult RunScript(UserConfiguration config)
+        public async Task<IActionResult> RunScript(UserConfiguration config)
         {
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
             // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
@@ -139,7 +150,7 @@ namespace WebInterface.Controllers
                     Directory.CreateDirectory(uploads);
                 }
 
-                config.FileName = "gams_licence";//config.File.FileName;
+                config.FileName = "licence";//config.File.FileName;
                 var filePath = Path.Combine(uploads, config.FileName);
 
                 if (config.File.Length > 0)
@@ -151,6 +162,24 @@ namespace WebInterface.Controllers
                 }
             }
         }
+
+        //public async Task<IList<ContainerListResponse>> GetDockerContainers()
+        //{
+        //    // https://docs.docker.com/docker-for-windows/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
+        //    // https://github.com/stefanprodan/dockerdash
+        // // https://medium.com/lucjuggery/about-var-run-docker-sock-3bfd276e12fd
+
+        //    DockerClient client2 = new DockerClientConfiguration(new Uri("tcp://localhost:2375"))
+        //        .CreateClient();
+
+        //    return await client2.Containers.ListContainersAsync(
+        //        new ContainersListParameters()
+        //        {
+        //            Limit = 10,
+        //        });
+
+        //    //var images2 = client2.Images.ListImagesAsync(new ImagesListParameters() { All = true }, CancellationToken.None);
+        //}
 
         public IActionResult BuildImage(UserConfiguration config, string imageName = "")
         {
@@ -199,14 +228,6 @@ namespace WebInterface.Controllers
             return this.View("Index", config);
 
             // Todo: Get user info: dockerfile not available
-        }
-
-        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-
-            var output = e.Data;
-
-            Debug.WriteLine(output);
         }
 
         public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")
