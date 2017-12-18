@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Docker.DotNet;
 using Docker.DotNet.Models;
@@ -30,6 +31,7 @@ namespace WebInterface.Controllers
         public HomeController(DockerService dockerService, IHostingEnvironment environment)
         {
             this.DockerService = dockerService;
+            this.hostingEnvironment = environment;
         }
 
         public List<GithubRepository> GithubRepositories { get; set; }
@@ -38,12 +40,88 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
-            List<ContainerModel> list = await this.DockerService.GetContainerList();
+            //var list = await this.DockerService.GetContainerList();
 
-            var icp = new ImagesCreateParameters();
-            var res = await this.DockerService.DockerClient.Images.CreateImageAsync(icp, new AuthConfig() { });
+            //var icp = new ImagesCreateParameters();
+            //var res = await this.DockerService.DockerClient.Images.CreateImageAsync(icp, new AuthConfig() { });
 
             return this.View(userConfig);
+        }
+
+        public async void CreateModelContainer(UserConfiguration config)
+        {
+            // https://github.com/Microsoft/Docker.DotNet/issues/134
+            // https://github.com/Microsoft/Docker.DotNet/issues/270
+            // https://github.com/Microsoft/Docker.DotNet/issues/212
+
+            string fileContent;
+            using (var reader = new StreamReader("./Output/Dockerfile-model"))
+            {
+                fileContent = reader.ReadToEnd();
+            }
+
+            var lines = Regex.Split(fileContent, "\r\n|\r|\n").ToList();
+
+            var image = lines.First(x => x.StartsWith("FROM")).Split("FROM")[1].Trim();
+            var parent = image.Split(":")[0].Trim();
+            var tag = image.Split(":")[1].Trim();
+
+            var statusUpdate = await this.DockerService.DockerClient.Images.PullImageAsync(new ImagesPullParameters { Parent = parent, Tag = tag }, new AuthConfig());
+
+            using (var reader = new StreamReader(statusUpdate))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    Debug.WriteLine(line);
+                }
+            }
+
+            var containerName = image.Split(":")[0].Replace("/", "_");
+
+            var containers = await this.DockerService.GetContainerList();
+
+            if (containers.Exists(x => x.Name == containerName))
+            {
+                var container = containers.FirstOrDefault(x => x.Name == containerName);
+                if (container != null)
+                {
+                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id, new ContainerRemoveParameters {Force = true});
+                }
+            }
+
+            var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
+            var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
+            var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
+            var entrypoint = lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x => x.Split("ENTRYPOINT")[1].Trim()).ToList();
+            var runCmds = lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList();
+
+            try
+            {
+                var response = this.DockerService.DockerClient.Containers.CreateContainerAsync(
+                    new CreateContainerParameters
+                    {
+                        Image = image,
+                        AttachStderr = true,
+                        AttachStdin = true,
+                        AttachStdout = true,
+                        Env = envVariables,
+                        WorkingDir = workingdir,
+                        Entrypoint = entrypoint,
+                        Cmd = runCmds,
+                        Name = containerName,
+                        //User = maintainer,
+                    }).Result;
+
+                this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID, new HostConfig { }).Wait();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                this.ViewBag.Message = e.Message;
+            }
+
+            this.ViewBag.Message = "Done!";
         }
 
         public IActionResult About()
@@ -97,6 +175,8 @@ namespace WebInterface.Controllers
         [HttpPost]
         public async Task<IActionResult> RunScript(UserConfiguration config)
         {
+            this.CreateModelContainer(config);
+
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
             // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
 
