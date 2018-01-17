@@ -107,7 +107,7 @@ namespace WebInterface.Controllers
                         AttachStdout = true,
                         Env = envVariables,
                         WorkingDir = workingdir,
-                        Entrypoint = entrypoint,
+                        //Entrypoint = entrypoint,
                         Cmd = runCmds,
                         Name = containerName,
                         //User = maintainer,

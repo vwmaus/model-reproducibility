@@ -113,7 +113,7 @@ function getGithubVersions(owner, repo) {
 
     res = httpGet(url2);
     obj = JSON.parse(res);
-    branches = new Array();
+    var branches = new Array();
 
     if (Object.prototype.toString.call(obj) === "[object Array]") {
         obj.forEach(function (entry) {

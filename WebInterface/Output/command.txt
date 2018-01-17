@@ -1,0 +1,1 @@
+"docker run -v C:\Users\peter\Documents\Source\model-reproducibility\WebInterface\Output\output:/output --name modelcontainer modelimage" 
