@@ -52,7 +52,7 @@ namespace WebInterface.Controllers
             // https://github.com/Microsoft/Docker.DotNet/issues/212
 
             string fileContent;
-            using (var reader = new StreamReader("./Output/Dockerfile-model"))
+            using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath, HomeControllerService.DockerFileName)))
             {
                 fileContent = reader.ReadToEnd();
             }
@@ -172,8 +172,7 @@ namespace WebInterface.Controllers
         [HttpPost]
         public async Task<IActionResult> RunScript(UserConfiguration config)
         {
-            // Create Model Container using the docker dotnet service
-            this.CreateModelContainer(config);
+            var hs = new HomeControllerService();
 
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
             // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
@@ -185,17 +184,21 @@ namespace WebInterface.Controllers
 
             this.UploadFile(config);
 
-            var hs = new HomeControllerService();
             // Todo: change x64 -> parse from program version of form
-            hs.CreateGamsDockerfile(config);
+            var programDockerfilePath = hs.CreateGamsDockerfile(config);
+            var fullpat = Path.GetFullPath(programDockerfilePath);
             //hs.CreateModelDockerfile(config);
 
             // docker compose yml
 
             // build docker image of program from dockerfile
-            const string programDockerfile = "./Output/gams-dockerfile";
+            var programDockerfile = $@"{HomeControllerService.OutputFilePath}/gams-dockerfile";  //"./Output/gams-dockerfile";
 
             var fullpath = Path.GetFullPath(programDockerfile);
+
+
+            // Create Model Container using the docker dotnet service
+            this.CreateModelContainer(config);
 
             var process = new Process();
             var startInfo = new ProcessStartInfo
@@ -275,7 +278,7 @@ namespace WebInterface.Controllers
 
             imageName = imageName.ToLower() + Guid.NewGuid().ToString().Substring(0, 4);
 
-            var outputPath = Path.GetFullPath("./Output/");
+            var outputPath = Path.GetFullPath(HomeControllerService.OutputFilePath);//"./Output/");
 
             var files = Directory.GetFiles(outputPath);
 
@@ -288,7 +291,7 @@ namespace WebInterface.Controllers
                 {
                     //WindowStyle = ProcessWindowStyle.Hidden,
                     FileName = "/bin/bash",
-                    Arguments = $@"docker build -t webinterface/{imageName} - < /app/Output/{dockerfile}",
+                    Arguments = $@"docker build -t webinterface/{imageName} - < /app/Output/{HomeControllerService.OutputFolderName}/{dockerfile}",
                     //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
                     RedirectStandardOutput = true
                 };
