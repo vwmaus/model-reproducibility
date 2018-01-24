@@ -75,7 +75,7 @@
 
         <div class="form-group">
             <label for="uploadLicenceFile">Upload licence file</label>
-            <input asp-for="File" class="form-control-file" id="uploadLicenceFile" />
+        <span><input asp-for="File" class="form-control-file" id="uploadLicenceFile" /><b id="uploadFile"></b></span>
             <br />
             <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />
         </div>
@@ -104,9 +104,9 @@
             </div>
         </div>
 
-        <div class="form-group">
+        @*<div class="form-group">
             <input type="submit" value="Build Image" id="btn_buildImage" class="btn btn-default" asp-action="BuildImage" asp-controller="Home" />
-        </div>
+        </div>*@
 
         <div class="form-group">
             <input type="submit" value="Run Script" class="btn btn-success" asp-action="RunScript" asp-controller="Home" />

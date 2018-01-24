@@ -145,6 +145,7 @@
             var outputFolder = $@"./OutputZip/";
             const string filename = "dockerfiles.zip";
             var outputfile = Path.Combine(outputFolder, filename);
+
             const string inputPath = "./Output/";
 
             if (!Directory.Exists(outputFolder))

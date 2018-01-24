@@ -1,12 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text.RegularExpressions;
-using System.Threading;
-using Docker.DotNet;
-using Docker.DotNet.Models;
-using Microsoft.AspNetCore.Hosting;
-using WebInterface.Classes;
-using WebInterface.Docker;
+﻿using Docker.DotNet.Models;
 
 namespace WebInterface.Controllers
 {
@@ -19,14 +11,19 @@ namespace WebInterface.Controllers
     using WebInterface.Services;
     using System.Linq;
     using Microsoft.AspNetCore.Mvc.Rendering;
-    using Microsoft.AspNetCore.Hosting.Internal;
-    using Microsoft.AspNetCore.Hosting.Server;
+    using Microsoft.AspNetCore.Hosting;
+    using WebInterface.Docker;
+    using System;
+    using System.Text.RegularExpressions;
+
 
     public class HomeController : Controller
     {
         public readonly DockerService DockerService;
 
         private readonly IHostingEnvironment hostingEnvironment;
+
+        public string OutputPath { get; set; }
 
         public HomeController(DockerService dockerService, IHostingEnvironment environment)
         {
@@ -128,17 +125,17 @@ namespace WebInterface.Controllers
         {
             //ViewData["Message"] = "Your application description page.";
 
-            return View();
+            return this.View();
         }
 
         public IActionResult Contact()
         {
-            return View();
+            return this.View();
         }
 
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
+            return this.View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
         }
 
         [HttpPost]
@@ -175,6 +172,7 @@ namespace WebInterface.Controllers
         [HttpPost]
         public async Task<IActionResult> RunScript(UserConfiguration config)
         {
+            // Create Model Container using the docker dotnet service
             this.CreateModelContainer(config);
 
             // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error

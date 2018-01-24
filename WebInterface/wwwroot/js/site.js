@@ -335,6 +335,14 @@ $(document).ready(function () {
         ReloadFormData();
     });
 
+    $("#uploadLicenceFile").change(function () {
+        var input = $("#uploadLicenceFile").prop("files");
+
+        if (input[0]) {
+            $("#uploadFile").text(input[0].name);
+        }
+    });
+
     //ReloadFormData();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////
