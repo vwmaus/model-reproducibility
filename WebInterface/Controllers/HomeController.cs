@@ -45,24 +45,29 @@ namespace WebInterface.Controllers
             return this.View(userConfig);
         }
 
-        public async void CreateModelContainer(UserConfiguration config)
+        public async Task<CreateContainerResponse> CreateModelContainer(UserConfiguration config)
         {
             // https://github.com/Microsoft/Docker.DotNet/issues/134
             // https://github.com/Microsoft/Docker.DotNet/issues/270
             // https://github.com/Microsoft/Docker.DotNet/issues/212
 
             string fileContent;
+
+            // Read Dockerfile Content
             using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath, HomeControllerService.DockerFileName)))
             {
                 fileContent = reader.ReadToEnd();
             }
 
+            // Parse Dockerfile Content
             var lines = Regex.Split(fileContent, "\r\n|\r|\n").ToList();
 
             var image = lines.First(x => x.StartsWith("FROM")).Split("FROM")[1].Trim();
             var parent = image.Split(":")[0].Trim();
             var tag = image.Split(":")[1].Trim();
 
+            // Parse Dockerfile Reference image
+            // Todo: Check if more than one image and load images
             var statusUpdate = await this.DockerService.DockerClient.Images.PullImageAsync(new ImagesPullParameters { Parent = parent, Tag = tag }, new AuthConfig());
 
             using (var reader = new StreamReader(statusUpdate))
@@ -83,19 +88,41 @@ namespace WebInterface.Controllers
                 var container = containers.FirstOrDefault(x => x.Name == containerName);
                 if (container != null)
                 {
-                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id, new ContainerRemoveParameters {Force = true});
+                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id, new ContainerRemoveParameters { Force = true });
                 }
             }
 
             var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
             var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
             var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
-            var entrypoint = lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x => x.Split("ENTRYPOINT")[1].Trim()).ToList();
+            var entrypoint = lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x => x.Split("ENTRYPOINT")[1].Trim()).ToList(); // entrypoint not necessary
             var runCmds = lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList();
+
+            var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
+
+            foreach (var envVar in env)
+            {
+                for (var index = 0; index < runCmds.Count; index++)
+                {
+                    var command = runCmds[index];
+
+                    if (!command.Contains(envVar.Key))
+                    {
+                        continue;
+                    }
+
+                    runCmds.Remove(command);
+                    runCmds.Add(command.Replace("${" + envVar.Key + "}", envVar.Value));
+                    //index = 0; // check from beginning 
+                    //i = 0;
+                }
+            }
+
+            CreateContainerResponse response = null;
 
             try
             {
-                var response = this.DockerService.DockerClient.Containers.CreateContainerAsync(
+                response = this.DockerService.DockerClient.Containers.CreateContainerAsync(
                     new CreateContainerParameters
                     {
                         Image = image,
@@ -110,15 +137,17 @@ namespace WebInterface.Controllers
                         //User = maintainer,
                     }).Result;
 
-                this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID, new HostConfig { }).Wait();
+                this.ViewBag.Message = "Done!";
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
                 this.ViewBag.Message = e.Message;
+
+                this.ViewBag.Message = "Error creating container!";
             }
 
-            this.ViewBag.Message = "Done!";
+            return response;
         }
 
         public IActionResult About()
@@ -198,8 +227,15 @@ namespace WebInterface.Controllers
 
 
             // Create Model Container using the docker dotnet service
-            this.CreateModelContainer(config);
+            var response = await this.CreateModelContainer(config);
 
+            if (response != null)
+            {
+                // Run start container -> image should run then
+                this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID, new HostConfig { }).Wait();
+            }
+
+            /*
             var process = new Process();
             var startInfo = new ProcessStartInfo
             {
@@ -215,6 +251,7 @@ namespace WebInterface.Controllers
             Debug.WriteLine(process.StandardOutput.ReadToEnd());
 
             // build docker image of model
+            */
 
             return this.View("Index", config);
         }
@@ -231,7 +268,7 @@ namespace WebInterface.Controllers
                     Directory.CreateDirectory(uploads);
                 }
 
-                config.FileName = "licence";//config.File.FileName;
+                config.FileName = "gamslice.txt";//"licence";//config.File.FileName;
                 var filePath = Path.Combine(uploads, config.FileName);
 
                 if (config.File.Length > 0)
@@ -295,7 +332,7 @@ namespace WebInterface.Controllers
                     //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
                     RedirectStandardOutput = true
                 };
-                
+
                 process.StartInfo = startInfo;
                 process.Start(); // no such file or directory
 
@@ -342,10 +379,10 @@ namespace WebInterface.Controllers
                 if (geoNodeDocumentData != null)
                 {
                     userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
-                        {
-                            Value = keyword.ToString(),
-                            Text = keyword.ToString()
-                        }
+                    {
+                        Value = keyword.ToString(),
+                        Text = keyword.ToString()
+                    }
                     ).ToList();
                 }
             }
@@ -377,10 +414,10 @@ namespace WebInterface.Controllers
                 if (repositoryBranches != null)
                 {
                     userConfig.GithubRepositoryBranches = repositoryBranches.Select(branch => new SelectListItem
-                        {
-                            Value = branch.Name, //+ " " + "GithubBranch",
-                            Text = branch.Name,
-                        })
+                    {
+                        Value = branch.Name, //+ " " + "GithubBranch",
+                        Text = branch.Name,
+                    })
                         .ToList();
                 }
 
@@ -389,10 +426,10 @@ namespace WebInterface.Controllers
                     userConfig.GithubRepositoryVersions.Clear();
                     userConfig.GithubRepositoryVersions.AddRange(userConfig.GithubRepositoryBranches);
                     userConfig.GithubRepositoryVersions.AddRange(repositoryVersions.Select(version => new SelectListItem
-                        {
-                            Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                            Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-                        })
+                    {
+                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                    })
                         .ToList());
                 }
             }

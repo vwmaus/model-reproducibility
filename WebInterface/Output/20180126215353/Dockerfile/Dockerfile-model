@@ -5,13 +5,13 @@ MAINTAINER "Victor Maus" maus@iiasa.ac.at
 ENV LICENSE_PATH=#LICENSE_PATH#
 
 # Get github repository from web inteface
-ENV GITHUB_USER=ptrkrnstnr
+ENV GITHUB_USER=vwmaus
 
 # Get github repository from web interface 
-ENV GITHUB_REPO=transport-model
+ENV GITHUB_REPO=Cmpl
 
 # Get model version from web interface 
-ENV GITHUB_RELEASE=v3.0
+ENV GITHUB_RELEASE=master
 
 # Get data version from web interface 
 ENV GEONODE_DATA=34
