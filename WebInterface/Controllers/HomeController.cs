@@ -1,4 +1,6 @@
-﻿using Docker.DotNet.Models;
+﻿using System.Threading;
+using Docker.DotNet.Models;
+using WebInterface.Classes;
 
 namespace WebInterface.Controllers
 {
@@ -131,7 +133,7 @@ namespace WebInterface.Controllers
                         AttachStdout = true,
                         Env = envVariables,
                         WorkingDir = workingdir,
-                        //Entrypoint = entrypoint,
+                        Entrypoint = entrypoint,
                         Cmd = runCmds,
                         Name = containerName,
                         //User = maintainer,
@@ -229,9 +231,35 @@ namespace WebInterface.Controllers
             // Create Model Container using the docker dotnet service
             var response = await this.CreateModelContainer(config);
 
+
             if (response != null)
             {
                 // Run start container -> image should run then
+
+                //var parameters = "\"/ bin / bash\", \" - c\", \"gams model.gms gdx =/ output / output\"";
+
+                //var containerStartParameters = new ContainerStartParameters()
+                //{
+                //    DetachKeys = parameters
+                //};
+
+                //var cfg = new ExecConfig()
+                //{
+                //    Cmd = new List<string> { parameters }
+                //};
+
+
+                //// https://github.com/Microsoft/Docker.DotNet/issues/212
+                //var containerStarted =
+                //    await this.DockerService.DockerClient.Containers.StartWithConfigContainerExecAsync(response.ID, cfg,
+                //        CancellationToken.None);
+
+                //if (containerStarted.IsNull())
+                //{
+
+                //}
+
+
                 this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID, new HostConfig { }).Wait();
             }
 
@@ -303,7 +331,7 @@ namespace WebInterface.Controllers
         {
             // https://docs.docker.com/engine/reference/builder/
 
-            HomeControllerService hs = new HomeControllerService();
+            var hs = new HomeControllerService();
 
             hs.CreateGamsDockerfile(config);
 

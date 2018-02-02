@@ -113,7 +113,7 @@ namespace WebInterface.Services
             {
                 if (string.IsNullOrEmpty(dockerFileName))
                 {
-                    dockerFileName = "Dockerfile-model";
+                    dockerFileName = "Dockerfile"; // "Dockerfile-model"
                 }
 
                 return dockerFileName;
