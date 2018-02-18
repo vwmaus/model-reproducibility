@@ -264,7 +264,13 @@ namespace WebInterface.Controllers
             var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
             var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
             var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
-            var entrypoint = lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x => x.Split("ENTRYPOINT")[1].Trim().Replace(@"\", string.Empty)).ToList();
+
+            var entrypoint = new List<string>();
+            foreach (var item in lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x =>
+                x.Split("ENTRYPOINT")[1].Trim().Replace(@"\", string.Empty).Split(" ").ToList()))
+            {
+                entrypoint.AddRange(item);
+            }
 
             // Todo: add copy licence
             //var runCmds = lines.Where(x => x.StartsWith("COPY")).Select(envVariable => envVariable.Split("COPY")[1].Trim()).ToList();
@@ -273,7 +279,14 @@ namespace WebInterface.Controllers
             var runCmds = lines.Where(x => x.StartsWith("COPY")).ToList();
 
             runCmds.AddRange(lines.Where(x => x.StartsWith("MKDIR")));
-            runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
+            //var cmds = ).ToList();
+
+            foreach (var item in lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
+            {
+                runCmds.AddRange(item);
+            }
+
+            //runCmds.AddRange(cmds);
 
             var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
