@@ -271,9 +271,9 @@ namespace WebInterface.Controllers
             //runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
 
             var runCmds = lines.Where(x => x.StartsWith("COPY")).ToList();
-            runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
 
             runCmds.AddRange(lines.Where(x => x.StartsWith("MKDIR")));
+            runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
 
             var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
