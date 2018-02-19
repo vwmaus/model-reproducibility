@@ -265,28 +265,40 @@ namespace WebInterface.Controllers
             var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
             var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
 
-            var entrypoint = new List<string>();
-            foreach (var item in lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x =>
-                x.Split("ENTRYPOINT")[1].Trim().Replace(@"\", string.Empty).Split(" ").ToList()))
-            {
-                entrypoint.AddRange(item);
-            }
+            // Brackets regex
+            var pattern = @"^(\[){1}(.*?)(\]){1}$";
+
+            // Get entrypoint line & remove brackets
+            var entrypoint = lines.First(x => 
+                x.StartsWith("ENTRYPOINT"))
+                .Replace("[", string.Empty)
+                .Replace("]", string.Empty)
+                .Replace("\"", string.Empty)
+                .Split("ENTRYPOINT")[1]
+                .Trim()
+                .Split(" ")
+                .ToList();
 
             // Todo: add copy licence
-            //var runCmds = lines.Where(x => x.StartsWith("COPY")).Select(envVariable => envVariable.Split("COPY")[1].Trim()).ToList();
-            //runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
 
-            var runCmds = lines.Where(x => x.StartsWith("COPY")).ToList();
+            // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
+            var cmds = new string[] {"RUN"}; //, "COPY", "ADD"};
 
-            runCmds.AddRange(lines.Where(x => x.StartsWith("MKDIR")));
-            //var cmds = ).ToList();
+            lines.ForEach(x => x.Replace("[", string.Empty).Replace("]", string.Empty).Replace("\"", string.Empty));
+            var result = lines.Where(l => cmds.All(l.StartsWith)).ToList();
 
-            foreach (var item in lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
+            var linesNew = new List<string>();
+            foreach (var l in lines)
+            {
+                var l1 = l;
+                linesNew.AddRange(from cmd in cmds where l1.StartsWith(cmd) select l);
+            }
+
+            var runCmds = new List<string>();
+            foreach (var item in linesNew.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
             {
                 runCmds.AddRange(item);
             }
-
-            //runCmds.AddRange(cmds);
 
             var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
@@ -518,6 +530,9 @@ namespace WebInterface.Controllers
                     if (containerStarted)
                     {
                         Debug.WriteLine("Container Started!!!");
+
+                        // todo: copy output
+                        // docker cp d07f55ec3f0f:/ output C:/ temp
                     }
                 }
                 catch (Exception ex)
