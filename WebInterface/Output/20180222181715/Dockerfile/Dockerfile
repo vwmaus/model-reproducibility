@@ -30,7 +30,7 @@ RUN curl -SL "http://geonode_geonode_1/documents/${GEONODE_DATA}/download" --cre
 RUN git checkout ${GITHUB_RELEASE}
 
 # Upload/copy license (file must be called gamslice.txt)
-#COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt
+COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt
 
 # Run model during container start 
 ENTRYPOINT ["/bin/bash", "-c", "gams model.gms gdx=/output/output"]

@@ -5,13 +5,13 @@ MAINTAINER "Victor Maus" maus@iiasa.ac.at
 ENV LICENSE_PATH=#LICENSE_PATH#
 
 # Get github repository from web inteface
-ENV GITHUB_USER=ptrkrnstnr
+ENV GITHUB_USER=vwmaus
 
 # Get github repository from web interface 
-ENV GITHUB_REPO=transport-model
+ENV GITHUB_REPO=Cmpl
 
 # Get model version from web interface 
-ENV GITHUB_RELEASE=v1.0
+ENV GITHUB_RELEASE=master
 
 # Get data version from web interface 
 ENV GEONODE_DATA=34
@@ -30,7 +30,7 @@ RUN curl -SL "http://geonode_geonode_1/documents/${GEONODE_DATA}/download" --cre
 RUN git checkout ${GITHUB_RELEASE}
 
 # Upload/copy license (file must be called gamslice.txt)
-#COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt
+COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt
 
 # Run model during container start 
 ENTRYPOINT ["/bin/bash", "-c", "gams model.gms gdx=/output/output"]

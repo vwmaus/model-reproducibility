@@ -33,5 +33,5 @@ RUN git checkout ${GITHUB_RELEASE}
 COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt
 
 # Run model during container start 
-ENTRYPOINT ["/bin/bash", "-c", "gams model.gms gdx=/output/output"]
+ENTRYPOINT ["/bin/bash" "-c" "gams model.gms gdx=/output/output"]
 

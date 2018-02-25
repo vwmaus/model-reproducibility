@@ -19,7 +19,6 @@ namespace WebInterface.Controllers
     using System;
     using System.Text.RegularExpressions;
 
-
     public class HomeController : Controller
     {
         public readonly DockerService DockerService;
@@ -48,159 +47,19 @@ namespace WebInterface.Controllers
             return this.View(userConfig);
         }
 
-        private async Task<CreateContainerResponse> CreateModelImage(UserConfiguration config)
+        public async Task CreateDockerImage(UserConfiguration config)
         {
-            return null;
-            /*
-            var test = true;
-
-            // https://github.com/Microsoft/Docker.DotNet/issues/134
-            // https://github.com/Microsoft/Docker.DotNet/issues/270
-            // https://github.com/Microsoft/Docker.DotNet/issues/212
-
-            // TODO: Share network (docker build --network geonode_default -t test_iiasagams .)
-
-            string fileContent;
-
-            if (test)
-            {
-                // Read Dockerfile Content
-                using (var reader = new StreamReader(@"./Output/20180213213801/Dockerfile/Dockerfile"))
+            var res = await this.DockerService.DockerClient.Images.CreateImageAsync(
+                new ImagesCreateParameters
                 {
-                    fileContent = reader.ReadToEnd();
-                }
-            }
-            else
-            {
-                // Read Dockerfile Content
-                using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath, HomeControllerService.DockerFileName)))
-                {
-                    fileContent = reader.ReadToEnd();
-                }
-            }
-
-            // Parse Dockerfile Content
-            var lines = Regex.Split(fileContent, "\r\n|\r|\n").ToList();
-
-            var image = lines.First(x => x.StartsWith("FROM")).Split("FROM")[1].Trim();
-            var parent = image.Split(":")[0].Trim();
-            var tag = image.Split(":")[1].Trim();
-
-            // Parse Dockerfile Reference image
-            // Todo: Check if more than one image and load images
-            var statusUpdate = await this.DockerService.DockerClient.Images.PullImageAsync(new ImagesPullParameters { Parent = parent, Tag = tag }, new AuthConfig());
-
-            using (var reader = new StreamReader(statusUpdate))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    Debug.WriteLine(line);
-                }
-            }
-
-            var imageName = image.Split(":")[0].Replace("/", "_");
-
-            var existingImages = await this.DockerService.GetImageList();
-
-            if (existingImages.Exists(x => x.Name == imageName))
-            {
-                var tempImage = existingImages.FirstOrDefault(x => x.Name == imageName);
-
-                if (tempImage != null)
-                {
-                    await this.DockerService.DockerClient.Images.DeleteImageAsync(tempImage.Id, new ImageDeleteParameters() { Force = true });
-                }
-            }
-
-            var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
-            var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
-            var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
-            var entrypoint = lines.Where(x => x.StartsWith("ENTRYPOINT")).Select(x => x.Split("ENTRYPOINT")[1].Trim().Replace(@"\", string.Empty)).ToList();
-
-            // Todo: add copy licence
-            //var runCmds = lines.Where(x => x.StartsWith("COPY")).Select(envVariable => envVariable.Split("COPY")[1].Trim()).ToList();
-            //runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim()).ToList());
-
-            var runCmds = lines.Where(x => x.StartsWith("COPY")).ToList();
-            runCmds.AddRange(lines.Where(x => x.StartsWith("RUN")));
-
-            var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
-
-            var exchangeEnvironmentVaribales = false;
-            if (exchangeEnvironmentVaribales)
-            {
-                foreach (var envVar in env)
-                {
-                    for (var index = 0; index < runCmds.Count; index++)
-                    {
-                        var command = runCmds[index];
-
-                        if (!command.Contains(envVar.Key))
-                        {
-                            continue;
-                        }
-
-                        runCmds.Remove(command);
-                        runCmds.Add(command.Replace("${" + envVar.Key + "}", envVar.Value));
-                        //index = 0; // check from beginning 
-                        //i = 0;
-                    }
-                }
-            }
-
-            // Remove license copy-command if the user didn't provide a license
-            foreach (var item in env)
-            {
-                if (item.Key.ToUpper().Contains("LICEN")) // LICENSE or LICENCE
-                {
-                    if (item.Value.Contains("#LICEN"))
-                    {
-                        foreach (var cmd in runCmds.ToList())
-                        {
-                            if (cmd.ToUpper().StartsWith("COPY ${LICEN"))
-                            {
-                                runCmds.Remove(cmd);
-                            }
-                        }
-                    }
-                }
-            }
-
-            try
-            {
-                var response = this.DockerService.DockerClient.Images.CreateImageAsync(
-                    new ImagesCreateParameters()
-                    {
-                        Image = image,
-                        AttachStderr = true,
-                        AttachStdin = true,
-                        AttachStdout = true,
-                        Env = envVariables,
-                        WorkingDir = workingdir,
-                        Entrypoint = entrypoint,
-                        Cmd = runCmds,
-                        Name = imageName,
-                        //HostConfig = new HostConfig({NetworkMode = })
-                        //User = maintainer,
-                    }).Result;
-
-                this.ViewBag.Message = "Done!";
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                this.ViewBag.Message = e.Message;
-
-                this.ViewBag.Message = "Error creating container!";
-            }
-            */
-            //return response;
+                    
+                }, 
+                new AuthConfig());
         }
 
-        public async Task<CreateContainerResponse> CreateModelContainer(UserConfiguration config)
+        public async Task<CreateContainerResponse> CreateDockerModelContainer(UserConfiguration config)
         {
-            var test = true;
+            const bool test = true;
 
             // https://github.com/Microsoft/Docker.DotNet/issues/134
             // https://github.com/Microsoft/Docker.DotNet/issues/270
@@ -222,7 +81,8 @@ namespace WebInterface.Controllers
             else
             {
                 // Read Dockerfile Content
-                using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath, HomeControllerService.DockerFileName)))
+                using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath,
+                    HomeControllerService.DockerFileName)))
                 {
                     fileContent = reader.ReadToEnd();
                 }
@@ -235,10 +95,12 @@ namespace WebInterface.Controllers
             var parent = image.Split(":")[0].Trim();
             var tag = image.Split(":")[1].Trim();
 
-            // Parse Dockerfile Reference image
-            // Todo: Check if more than one image and load images
-            var statusUpdate = await this.DockerService.DockerClient.Images.PullImageAsync(new ImagesPullParameters { Parent = parent, Tag = tag }, new AuthConfig());
+            // Pull Dockerfile Reference image
+            var statusUpdate =
+                await this.DockerService.DockerClient.Images.PullImageAsync(
+                    new ImagesPullParameters {Parent = parent, Tag = tag}, new AuthConfig());
 
+            // Get stream output
             using (var reader = new StreamReader(statusUpdate))
             {
                 string line;
@@ -249,7 +111,6 @@ namespace WebInterface.Controllers
             }
 
             var containerName = image.Split(":")[0].Replace("/", "_");
-
             var containers = await this.DockerService.GetContainerList();
 
             if (containers.Exists(x => x.Name == containerName))
@@ -257,23 +118,26 @@ namespace WebInterface.Controllers
                 var container = containers.FirstOrDefault(x => x.Name == containerName);
                 if (container != null)
                 {
-                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id, new ContainerRemoveParameters { Force = true });
+                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id,
+                        new ContainerRemoveParameters {Force = true});
                 }
             }
 
-            var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
-            var envVariables = lines.Where(x => x.StartsWith("ENV")).Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
+            //var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
+            var envVariables = lines.Where(x => x.StartsWith("ENV"))
+                .Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
             var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
 
             // Brackets regex
-            var pattern = @"^(\[){1}(.*?)(\]){1}$";
+            //var pattern = @"^(\[){1}(.*?)(\]){1}$";
 
             // Get entrypoint line & remove brackets
-            var entrypoint = lines.First(x => 
-                x.StartsWith("ENTRYPOINT"))
+            var entrypoint = lines.First(x =>
+                    x.StartsWith("ENTRYPOINT"))
                 .Replace("[", string.Empty)
                 .Replace("]", string.Empty)
                 .Replace("\"", string.Empty)
+                .Replace(",", string.Empty)
                 .Split("ENTRYPOINT")[1]
                 .Trim()
                 .Split(" ")
@@ -282,27 +146,29 @@ namespace WebInterface.Controllers
             // Todo: add copy licence
 
             // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
-            var cmds = new string[] {"RUN"}; //, "COPY", "ADD"};
+            var cmds = new[] {"RUN"}; //, "COPY", "ADD"};
 
-            lines.ForEach(x => x.Replace("[", string.Empty).Replace("]", string.Empty).Replace("\"", string.Empty));
-            var result = lines.Where(l => cmds.All(l.StartsWith)).ToList();
+            //var result = lines.Where(l => cmds.All(l.StartsWith)).ToList();
 
             var linesNew = new List<string>();
             foreach (var l in lines)
             {
-                var l1 = l;
+                var l1 = l.Replace("[", string.Empty).Replace("]", string.Empty).Replace("\"", string.Empty)
+                    .Replace(",", string.Empty);
                 linesNew.AddRange(from cmd in cmds where l1.StartsWith(cmd) select l);
             }
 
             var runCmds = new List<string>();
-            foreach (var item in linesNew.Where(x => x.StartsWith("RUN")).Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
+            foreach (var item in linesNew.Where(x => x.StartsWith("RUN"))
+                .Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
             {
                 runCmds.AddRange(item);
             }
 
-            var env = envVariables.Select(str => str.Split("=")).Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
+            var env = envVariables.Select(str => str.Split("="))
+                .Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
-            var exchangeEnvironmentVaribales = false;
+            const bool exchangeEnvironmentVaribales = false;
             if (exchangeEnvironmentVaribales)
             {
                 foreach (var envVar in env)
@@ -344,9 +210,13 @@ namespace WebInterface.Controllers
 
             CreateContainerResponse response = null;
 
-            try
-            {
+            //entrypoint.AddRange(new List<string> {"-v", "C:Temp/output:/output"});
+
+        try
+        {
                 //https://github.com/Microsoft/Docker.DotNet/issues/212
+                // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
+
                 response = this.DockerService.DockerClient.Containers.CreateContainerAsync(
                     new CreateContainerParameters
                     {
@@ -360,7 +230,7 @@ namespace WebInterface.Controllers
                         Cmd = runCmds,
                         Name = containerName,
                         //HostConfig = new HostConfig({NetworkMode = })
-                        //User = maintainer,
+                        //User = maintainer
                     }).Result;
 
                 this.ViewBag.Message = "Done!";
@@ -455,7 +325,7 @@ namespace WebInterface.Controllers
             //var response = await this.CreateModelImage(config);
 
             // Create Model Container using the docker dotnet service
-            var response = await this.CreateModelContainer(config);
+            var response = await this.CreateDockerModelContainer(config);
 
             if (response != null)
             {
@@ -523,6 +393,18 @@ namespace WebInterface.Controllers
 
                     //this.DockerService.DockerClient.Containers.st
 
+                    //var buffer = new byte[1024];
+                    //using (var stream = await this.DockerService.DockerClient.Containers.StartAndAttachContainerExecAsync(response.ID, true, CancellationToken.None))
+                    //{
+                    //    //await stream.WriteAsync()//echo, 0, echo.Length, default(CancellationToken));
+                    //    var result = await stream.ReadOutputAsync(buffer, 0, buffer.Length, CancellationToken.None);
+                    //    do
+                    //    {
+                    //        Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                    //    }
+                    //    while (!result.EOF);
+                    //}
+
                     var containerStarted =
                         await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
                             new HostConfig { });
@@ -534,32 +416,90 @@ namespace WebInterface.Controllers
                         // todo: copy output
                         // docker cp d07f55ec3f0f:/ output C:/ temp
                     }
+
+                    // Wait for container to be stopped
+                    var containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
+                    while (string.IsNullOrEmpty(containerInspectStats.State.FinishedAt))
+                    { 
+                            Thread.Sleep(1000);
+                            containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
+                    }
+
+                    //var container = this.DockerService.GetContainerList().Result.FindAll(x => x.Name.Equals("iiasa_gams")).First();
+
+                    //var x = await this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
+                    //    response.ID,
+                    //    new GetArchiveFromContainerParameters
+                    //    {
+                    //        Path = "/output/output.gdx"
+                    //    }, 
+                    //    false, 
+                    //    CancellationToken.None);
+
+                    //GetArchiveFromContainerResponse result;
+                    ////while (true)
+                    ////{
+                    //    //var resultA = client.System.GetVersionAsync().Result;
+                    //    result = this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
+                    //        response.ID,
+                    //        new GetArchiveFromContainerParameters() { Path = "/output/output.gdx" },
+                    //        false,
+                    //        CancellationToken.None).Result;
+
+                    //    result.Stream.Dispose();
+                    //    Thread.Sleep(1);
+                    ////}
+
+                    //if (result == null)
+                    //{
+                    //    Debug.WriteLine("err");
+                    //}
+
+                    //var res = await this.DockerService.DockerClient.Containers.StartWithConfigContainerExecAsync(response.ID,
+                    //    new ExecConfig
+                    //    {
+                    //        Cmd =
+                    //        {
+                    //            "bin/bash",
+                    //            "-v",
+                    //            "/Output/tempOutput:/output",
+                    //            "--name",
+                    //            "iiasa_gams",
+                    //            "iiasa/gams"
+                    //        }
+                    //    },
+                    //    CancellationToken.None);
+
+                    //if (res == null)
+                    //{
+                    //    Debug.WriteLine("Error");
+                    //}
+
+                    containerStarted =
+                        await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
+                            new HostConfig { });
+
+                    //var stream =
+                    //    await this.DockerService.DockerClient.Containers.GetContainerStatsAsync(response.ID,
+                    //        new ContainerStatsParameters(), 
+                    //        CancellationToken.None);
+
+
                 }
                 catch (Exception ex)
                 {
+                    Debug.WriteLine("=================== ERROR ===========================================================================");
                     Debug.WriteLine(ex.Message);
+                    Debug.WriteLine("=====================================================================================================");
                 }
             }
-
-            /*
-            var process = new Process();
-            var startInfo = new ProcessStartInfo
-            {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = "/bin/bash",
-                Arguments = $@"docker build -f {fullpath} .",
-                RedirectStandardOutput = true
-            };
-
-            process.StartInfo = startInfo;
-            process.Start(); // no such file or directory
-
-            Debug.WriteLine(process.StandardOutput.ReadToEnd());
-
-            // build docker image of model
-            */
-
+            
             return this.View("Index", config);
+        }
+
+        public bool CheckContainerRun()
+        {
+            return true;
         }
 
         public async void UploadFile(UserConfiguration config)
