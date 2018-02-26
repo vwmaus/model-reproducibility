@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices.WindowsRuntime;
-
-namespace WebInterface.Services
+﻿namespace WebInterface.Services
 {
     using System;
     using System.Collections.Generic;

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 using System.Threading;
 using Docker.DotNet.Models;
 using WebInterface.Classes;
@@ -110,7 +111,7 @@ namespace WebInterface.Controllers
                 }
             }
 
-            var containerName = image.Split(":")[0].Replace("/", "_");
+            var containerName = $"c_{image.Split(":")[0].Replace("/", "_")}";
             var containers = await this.DockerService.GetContainerList();
 
             if (containers.Exists(x => x.Name == containerName))
@@ -126,15 +127,15 @@ namespace WebInterface.Controllers
             //var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
             var envVariables = lines.Where(x => x.StartsWith("ENV"))
                 .Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
-            var workingdir = lines.First(x => x.StartsWith("WORKDIR")).Split("WORKDIR")[1].Trim();
+            var workingdir = lines.FirstOrDefault(x => x.StartsWith("WORKDIR"))?.Split("WORKDIR")[1].Trim();
 
             // Brackets regex
             //var pattern = @"^(\[){1}(.*?)(\]){1}$";
 
             // Get entrypoint line & remove brackets
-            var entrypoint = lines.First(x =>
+            var entrypoint = lines.FirstOrDefault(x =>
                     x.StartsWith("ENTRYPOINT"))
-                .Replace("[", string.Empty)
+                ?.Replace("[", string.Empty)
                 .Replace("]", string.Empty)
                 .Replace("\"", string.Empty)
                 .Replace(",", string.Empty)
@@ -142,6 +143,15 @@ namespace WebInterface.Controllers
                 .Trim()
                 .Split(" ")
                 .ToList();
+
+            var pattern = @"([""'])(?:(?=(\\?))\2.)*?\1";
+            string first = lines.FirstOrDefault(x => x.StartsWith("ENTRYPOINT"));
+            if (first != null)
+            {
+                entrypoint = Regex.Matches(first, pattern)
+                    .Select(match => match.Value.Replace("\"", string.Empty)).ToList();
+            }
+
 
             // Todo: add copy licence
 
@@ -168,7 +178,7 @@ namespace WebInterface.Controllers
             var env = envVariables.Select(str => str.Split("="))
                 .Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
-            const bool exchangeEnvironmentVaribales = false;
+            const bool exchangeEnvironmentVaribales = true;
             if (exchangeEnvironmentVaribales)
             {
                 foreach (var envVar in env)
@@ -182,8 +192,7 @@ namespace WebInterface.Controllers
                             continue;
                         }
 
-                        runCmds.Remove(command);
-                        runCmds.Add(command.Replace("${" + envVar.Key + "}", envVar.Value));
+                        runCmds[index] = command.Replace("${" + envVar.Key + "}", envVar.Value);
                         //index = 0; // check from beginning 
                         //i = 0;
                     }
@@ -211,9 +220,15 @@ namespace WebInterface.Controllers
             CreateContainerResponse response = null;
 
             //entrypoint.AddRange(new List<string> {"-v", "C:Temp/output:/output"});
+            var newEntry = new List<string>();
+            newEntry.AddRange(runCmds);
+            newEntry.AddRange(entrypoint.IsNull() ? new List<string>() : entrypoint);
 
-        try
-        {
+            // https://stackoverflow.com/questions/42857897/execute-a-script-before-cmd/42858351
+            // CMD & ENTRYPOINT
+
+            try
+            {
                 //https://github.com/Microsoft/Docker.DotNet/issues/212
                 // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
 
@@ -224,10 +239,13 @@ namespace WebInterface.Controllers
                         AttachStderr = true,
                         AttachStdin = true,
                         AttachStdout = true,
+                        Tty = true,
+                        NetworkingConfig = new NetworkingConfig(),
+                        OnBuild = new List<string>(),
                         Env = envVariables,
                         WorkingDir = workingdir,
-                        Entrypoint = entrypoint,
-                        Cmd = runCmds,
+                        Entrypoint = newEntry, //entrypoint,
+                        //Cmd = runCmds,
                         Name = containerName,
                         //HostConfig = new HostConfig({NetworkMode = })
                         //User = maintainer
@@ -405,9 +423,37 @@ namespace WebInterface.Controllers
                     //    while (!result.EOF);
                     //}
 
-                    var containerStarted =
-                        await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
+                    var client = this.DockerService.DockerClient;
+                     
+                    var containerStarted = 
+                        await client.Containers.StartContainerAsync(response.ID,
                             new HostConfig { });
+
+                    // strange exit status code behavior #3379
+                    // https://github.com/docker/compose/issues/3379
+                    //
+
+                    // docker logs c_iiasa_gams
+                    // --> get output of container
+
+                    //https://github.com/Microsoft/Docker.DotNet/issues/100
+
+                    var log = await this.DockerService.DockerClient.Containers.GetContainerLogsAsync(response.ID,
+                        new ContainerLogsParameters {ShowStderr = true, ShowStdout = true, Timestamps = true}, CancellationToken.None);
+
+                    // Get stream output
+                    using (var reader = new StreamReader(log))
+                    {
+                        string line;
+                        Debug.WriteLine("==== LOG ======================");
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            
+                            Debug.WriteLine(line);
+                        }
+                        Debug.WriteLine("===============================");
+                    }
+
 
                     if (containerStarted)
                     {
@@ -478,6 +524,8 @@ namespace WebInterface.Controllers
                     containerStarted =
                         await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
                             new HostConfig { });
+
+                    //https://stackoverflow.com/questions/22907231/copying-files-from-host-to-docker-container
 
                     //var stream =
                     //    await this.DockerService.DockerClient.Containers.GetContainerStatsAsync(response.ID,
