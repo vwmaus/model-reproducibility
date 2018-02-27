@@ -14,7 +14,7 @@ ENV GITHUB_REPO=Cmpl
 ENV GITHUB_RELEASE=master
 
 # Get data version from web interface 
-ENV GEONODE_DATA=2
+ENV GEONODE_DATA=1
 
 # Clone github repository  
 RUN git clone "https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git" /workspace 

@@ -1,7 +1,5 @@
 cd -> Dockerfile directory
 
-docker build -t custom_imagename .
-
 // shared volume between hostmachine and docker container
 // 
 docker run -v <output of hostmachine>:<folder inside of container> --name 
@@ -9,8 +7,12 @@ docker run -v C:\Users\peter\Documents\Source\model-reproducibility\WebInterface
 
 // Dockerfile ausführen
 docker build --network geonode_default -t test_iiasagams .
+// ohne network --> could not resolve host "geonode_geonode_1"
 
 // Access to output
 docker run -v <output of hostmachine>:<folder inside of container> --name <UserDefinedContainerName> <createdImageNameFromBuildCommand>
 docker run -v D:/GitRepo/OutputPath_IIASA:/output --name iiasa_test_container test_iiasagams
+
+// If container is stopped 
+docker cp hostmachinefolder dest-folder
 
