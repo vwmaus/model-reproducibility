@@ -14,16 +14,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gray.Microsoft.AspNetCore.SignalR.Server" Version="0.2.0-alpha1" />
+    <PackageReference Include="Docker.DotNet" Version="3.125.1" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
+    <PackageReference Include="SharpZipLib" Version="1.0.0-alpha2" />
   </ItemGroup>
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Docker.DotNet\Docker.DotNet.csproj" />
   </ItemGroup>
 
 </Project>

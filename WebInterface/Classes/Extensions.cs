@@ -33,5 +33,19 @@ namespace WebInterface.Classes
             return fileName + "_"
                    + Guid.NewGuid().ToString().Substring(0, 4);
         }
+
+        public static string FullMessage(this Exception ex)
+        {
+            var message = string.Empty;
+
+            message += ex.Message + "\n";
+
+            if (ex.InnerException != null)
+            {
+                message += ex.InnerException.Message;
+            }
+
+            return message;
+        }
     }
 }

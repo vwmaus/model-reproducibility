@@ -1,8 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
-using System.Threading;
-using Docker.DotNet.Models;
-using WebInterface.Classes;
+﻿#define testrun
+//#define exchangeEnvironmentVariables
 
 namespace WebInterface.Controllers
 {
@@ -16,21 +13,23 @@ namespace WebInterface.Controllers
     using System.Linq;
     using Microsoft.AspNetCore.Mvc.Rendering;
     using Microsoft.AspNetCore.Hosting;
-    using WebInterface.Docker;
     using System;
     using System.Text.RegularExpressions;
+    using System.Threading;
+    using WebInterface.Classes;
+    using Docker.DotNet;
+    using Docker.DotNet.Models;
 
     public class HomeController : Controller
     {
-        public readonly DockerService DockerService;
+        public static DockerClient Client;
 
         private readonly IHostingEnvironment hostingEnvironment;
 
         public string OutputPath { get; set; }
 
-        public HomeController(DockerService dockerService, IHostingEnvironment environment)
+        public HomeController(IHostingEnvironment environment)
         {
-            this.DockerService = dockerService;
             this.hostingEnvironment = environment;
         }
 
@@ -40,6 +39,26 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
+            https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
+            if (Client == null)
+            {
+                var dockerAddress = Environment.GetEnvironmentVariable("DOCKER_REMOTE_API");
+                Client = new DockerClientConfiguration(new Uri(dockerAddress))
+                    .CreateClient();
+
+                //var report = new Progress<JSONMessage>(msg =>
+                //{
+                //    Debug.WriteLine($"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}");
+                //});
+
+                //await Client.System.MonitorEventsAsync(new ContainerEventsParameters(), report, CancellationToken.None);
+            }
+
+            //var info = await Client.System.GetSystemInfoAsync(CancellationToken.None);
+            //Debug.WriteLine(info);
+
+            //var c = await Client.Containers.ListContainersAsync(new ContainersListParameters(), CancellationToken.None);
+
             //var list = await this.DockerService.GetContainerList();
 
             //var icp = new ImagesCreateParameters();
@@ -48,20 +67,8 @@ namespace WebInterface.Controllers
             return this.View(userConfig);
         }
 
-        public async Task CreateDockerImage(UserConfiguration config)
-        {
-            var res = await this.DockerService.DockerClient.Images.CreateImageAsync(
-                new ImagesCreateParameters
-                {
-
-                },
-                new AuthConfig());
-        }
-
         public async Task<CreateContainerResponse> CreateDockerModelContainer(UserConfiguration config)
         {
-            const bool test = true;
-
             // https://github.com/Microsoft/Docker.DotNet/issues/134
             // https://github.com/Microsoft/Docker.DotNet/issues/270
             // https://github.com/Microsoft/Docker.DotNet/issues/212
@@ -71,23 +78,20 @@ namespace WebInterface.Controllers
 
             string fileContent;
 
-            if (test)
+#if testrun
+            // Read Dockerfile Content
+            using (var reader = new StreamReader(@"./Output/test/Dockerfile/Dockerfile"))
             {
-                // Read Dockerfile Content
-                using (var reader = new StreamReader(@"./Output/test/Dockerfile/Dockerfile"))
-                {
-                    fileContent = reader.ReadToEnd();
-                }
+                fileContent = reader.ReadToEnd();
             }
-            else
-            {
-                // Read Dockerfile Content
-                using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath,
+#else
+            // Read Dockerfile Content
+            using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath,
                     HomeControllerService.DockerFileName)))
                 {
                     fileContent = reader.ReadToEnd();
                 }
-            }
+#endif
 
             // Parse Dockerfile Content
             var lines = Regex.Split(fileContent, "\r\n|\r|\n").ToList();
@@ -96,30 +100,42 @@ namespace WebInterface.Controllers
             var parent = image.Split(":")[0].Trim();
             var tag = image.Split(":")[1].Trim();
 
+            var report = new Progress<JSONMessage>(msg =>
+            {
+                Debug.WriteLine($"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}");
+            });
+
             // Pull Dockerfile Reference image
-            var statusUpdate =
-                await this.DockerService.DockerClient.Images.PullImageAsync(
-                    new ImagesPullParameters { Parent = parent, Tag = tag }, new AuthConfig());
+            await Client.Images.CreateImageAsync(new ImagesCreateParameters
+            {
+                FromImage = image,
+            }, new AuthConfig(), report
+            );
+
+
+            //new ImageLoadParameters() {Parent = parent, Tag = tag}, new AuthConfig());
 
             // Get stream output
-            using (var reader = new StreamReader(statusUpdate))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    Debug.WriteLine(line);
-                }
-            }
+            //using (var reader = new StreamReader(statusUpdate))
+            //{
+            //    string line;
+            //    while ((line = reader.ReadLine()) != null)
+            //    {
+            //        Debug.WriteLine(line);
+            //    }
+            //}
 
             var containerName = $"c_{image.Split(":")[0].Replace("/", "_")}";
-            var containers = await this.DockerService.GetContainerList();
+            var containers =
+                await Client.Containers.ListContainersAsync(new ContainersListParameters(),
+                    CancellationToken.None);
 
-            if (containers.Exists(x => x.Name == containerName))
+            if (containers.ToList().Exists(x => x.Names.Contains(containerName)))
             {
-                var container = containers.FirstOrDefault(x => x.Name == containerName);
+                var container = containers.FirstOrDefault(x => x.Names.Contains(containerName));
                 if (container != null)
                 {
-                    await this.DockerService.DockerClient.Containers.RemoveContainerAsync(container.Id,
+                    await Client.Containers.RemoveContainerAsync(container.ID,
                         new ContainerRemoveParameters { Force = true });
                 }
             }
@@ -178,26 +194,24 @@ namespace WebInterface.Controllers
             var env = envVariables.Select(str => str.Split("="))
                 .Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
 
-            const bool exchangeEnvironmentVaribales = true;
-            if (exchangeEnvironmentVaribales)
+#if exchangeEnvironmentVariables
+            foreach (var envVar in env)
             {
-                foreach (var envVar in env)
+                for (var index = 0; index < runCmds.Count; index++)
                 {
-                    for (var index = 0; index < runCmds.Count; index++)
+                    var command = runCmds[index];
+
+                    if (!command.Contains(envVar.Key))
                     {
-                        var command = runCmds[index];
-
-                        if (!command.Contains(envVar.Key))
-                        {
-                            continue;
-                        }
-
-                        runCmds[index] = command.Replace("${" + envVar.Key + "}", envVar.Value);
-                        //index = 0; // check from beginning 
-                        //i = 0;
+                        continue;
                     }
+
+                    runCmds[index] = command.Replace("${" + envVar.Key + "}", envVar.Value);
+                    //index = 0; // check from beginning 
+                    //i = 0;
                 }
             }
+#endif
 
             // Remove license copy-command if the user didn't provide a license
             foreach (var item in env)
@@ -232,10 +246,10 @@ namespace WebInterface.Controllers
                 //https://github.com/Microsoft/Docker.DotNet/issues/212
                 // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
 
-                var networks = await this.DockerService.DockerClient.Networks.ListNetworksAsync();
+                var networks = await Client.Networks.ListNetworksAsync();
                 var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
 
-                response = this.DockerService.DockerClient.Containers.CreateContainerAsync(
+                response = Client.Containers.CreateContainerAsync(
                     new CreateContainerParameters
                     {
                         Image = image,
@@ -245,7 +259,6 @@ namespace WebInterface.Controllers
                         Tty = true,
                         NetworkingConfig = new NetworkingConfig
                         {
-
                             //EndpointsConfig = 
                         },
                         OnBuild = new List<string>(),
@@ -322,15 +335,22 @@ namespace WebInterface.Controllers
         [HttpPost]
         public async Task<IActionResult> RunScript(UserConfiguration config)
         {
-            var hs = new HomeControllerService();
-
-            // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
-            // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
-
             if (!this.ModelState.IsValid)
             {
                 return this.View("Index", config);
             }
+
+            await this.RunScriptAsync(config);
+
+            return this.View("Index", config);
+        }
+
+        public async Task RunScriptAsync(UserConfiguration config)
+        {
+            var hs = new HomeControllerService();
+
+            // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
+            // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
 
             this.UploadFile(config);
 
@@ -342,121 +362,57 @@ namespace WebInterface.Controllers
             // docker compose yml
 
             // build docker image of program from dockerfile
-            var programDockerfile = $@"{HomeControllerService.OutputFilePath}/gams-dockerfile";  //"./Output/gams-dockerfile";
+            var programDockerfile =
+                $@"{HomeControllerService.OutputFilePath}/gams-dockerfile"; //"./Output/gams-dockerfile";
 
             var fullpath = Path.GetFullPath(programDockerfile);
 
-            this.DockerService.MonitorEvents();
-            //var response = await this.CreateModelImage(config);
+            // ------- CREATE IMAGE FROM DOCKERFILE
 
-            // Create Model Container using the docker dotnet service
-            var response = await this.CreateDockerModelContainer(config);
-
-            if (response != null)
+            try
             {
-                // Run start container -> image should run then
+                //// https://github.com/Microsoft/Docker.DotNet/issues/197
+                
+                const string path = @"./Output/test/Dockerfile/Dockerfile.old";
 
-                //var parameters = "\"/ bin / bash\", \" - c\", \"gams model.gms gdx =/ output / output\"";
+                const string pathTar = @"./Output/test/Dockerfile/Dockerfile.tar";
+                /*
+                var tar = Path.GetFullPath(pathTar);
+                var dockpath = Path.GetFullPath(path);
 
-                //var containerStartParameters = new ContainerStartParameters()
+                if (!System.IO.File.Exists(pathTar))
+                {
+                    System.IO.File.Delete(pathTar);
+                }
+                
+                hs.CreateTarGz("./Output/test/Dockerfile/Dockerfile.tar", dockpath);
+                */
+                //using (var sr = new StreamReader(path))
                 //{
-                //    DetachKeys = parameters
-                //};
-
-                //var cfg = new ExecConfig()
-                //{
-                //    Cmd = new List<string> { parameters }
-                //};
-
-
-                //// https://github.com/Microsoft/Docker.DotNet/issues/212
-                //var containerStarted =
-                //    await this.DockerService.DockerClient.Containers.StartWithConfigContainerExecAsync(response.ID, cfg,
-                //        CancellationToken.None);
-
-                //if (containerStarted.IsNull())
-                //{
-
+                //    var content = sr.ReadToEnd();
+                //    Debug.WriteLine("======== DOCKERFILE START ======");
+                //    Debug.WriteLine("Dockerfile Content: \n" + content);
+                //    Debug.WriteLine("========= DOCKERFILE END =======");
                 //}
 
-                var networks = await this.DockerService.DockerClient.Networks.ListNetworksAsync();
+                var networks = await Client.Networks.ListNetworksAsync();
                 var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
 
-                //await this.DockerService.DockerClient.Networks.ConnectNetworkAsync(geonodeNetwork.ID,
-                //    new NetworkConnectParameters
-                //    {
-                //        Container = "c_iiasa_gams",
-                //        EndpointConfig = new EndpointSettings
-                //        {
-
-                //        }
-                //    });
-
-                // https://github.com/Microsoft/Docker.DotNet/issues/184
-                //await this.DockerService.DockerClient.Networks.ConnectNetworkAsync(geonodeNetwork.ID, new NetworkConnectParameters {Container = "iiasa_gams"});
-
-                try
+                var imageBuildParameters = new ImageBuildParameters()
                 {
-                    //Debug.WriteLine("-------------------- START CONTAINER ---------------------");
+                    Remove = true,
+                    ForceRemove = true,
+                    Tags = new List<string> { $@"gams/iiasa:latest"}, //{DateTime.Now.ToShortDateString()}" },
+                    BuildArgs = new Dictionary<string, string> { { "--network", "geonode_default" }},//geonodeNetwork.Name } }
+                    //Dockerfile = @"./Output/test/Dockerfile/Dockerfile"
+                };
 
-                    //// https://github.com/Microsoft/Docker.DotNet/issues/197
-                    //var cfg = new ExecConfig
-                    //{
-                    //    AttachStderr = true,
-                    //    AttachStdin = true,
-                    //    AttachStdout = true,
-                    //    Cmd = new string[] { "env", "TERM=xterm-256color", "bash" },
-                    //    Detach = false,
-                    //    Tty = false,
-                    //    User = "root",
-                    //    Privileged = true
-                    //};
-
-                    //var echo = Encoding.UTF8.GetBytes("ls -al");
-
-                    //var buffer = new byte[1024];
-                    //using (var stream = await this.DockerService.DockerClient.Containers.StartWithConfigContainerExecAsync(response.ID, cfg, default(CancellationToken)))
-                    //{
-                    //    await stream.WriteAsync(echo, 0, echo.Length, default(CancellationToken));
-                    //    var result = await stream.ReadOutputAsync(buffer, 0, buffer.Length, default(CancellationToken));
-                    //    do
-                    //    {
-                    //        Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                    //    }
-                    //    while (!result.EOF);
-                    //}
-
-                    //this.DockerService.DockerClient.Containers.st
-
-                    //var buffer = new byte[1024];
-                    //using (var stream = await this.DockerService.DockerClient.Containers.StartAndAttachContainerExecAsync(response.ID, true, CancellationToken.None))
-                    //{
-                    //    //await stream.WriteAsync()//echo, 0, echo.Length, default(CancellationToken));
-                    //    var result = await stream.ReadOutputAsync(buffer, 0, buffer.Length, CancellationToken.None);
-                    //    do
-                    //    {
-                    //        Debug.WriteLine(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                    //    }
-                    //    while (!result.EOF);
-                    //}
-
-                    var client = this.DockerService.DockerClient;
-
-
-
+                using (var fs = new FileStream(pathTar, FileMode.Open))
+                {
                     // https://stackoverflow.com/questions/33997089/how-can-i-create-a-stream-for-dockerdotnet-buildimagefromdockerfile-method
-                    var fs = new FileStream(@"./Output/test/Dockerfile/Dockerfile.tar", FileMode.Open);
-                    var statusUpdate = await client.Miscellaneous.BuildImageFromDockerfileAsync(
+                    var statusUpdate = await Client.Images.BuildImageFromDockerfileAsync(
                         fs,
-                        new ImageBuildParameters
-                        {
-                            Remove = true,
-                            ForceRemove = true,
-                            Tags = new List<string> { "latest" },
-                            Labels = new Dictionary<string, string> { { "iiasa_img", "iiasa_img" } }
-                            //Dockerfile = @"./Output/test/Dockerfile/Dockerfile"
-                            //BuildArgs = new Dictionary<string, string>("asdf", "a")
-                            },
+                        imageBuildParameters,
                         CancellationToken.None);
 
                     using (var streamReader = new StreamReader(statusUpdate))
@@ -468,10 +424,41 @@ namespace WebInterface.Controllers
                         }
                     }
 
+                    fs.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    "=================== ERROR ===========================================================================");
+                Debug.WriteLine(ex.Message); //ex.FullMessage());
 
-                    var containerStarted =
-                        await client.Containers.StartContainerAsync(response.ID,
-                            new HostConfig { });
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine(ex.InnerException.Message);
+                }
+
+                Debug.WriteLine(
+                    "=====================================================================================================");
+            }
+
+            /*
+            // Create Model Container using the docker dotnet service
+            var response = await this.CreateDockerModelContainer(config);
+
+            if (response != null)
+            {
+                //// https://github.com/Microsoft/Docker.DotNet/issues/212
+
+                // https://github.com/Microsoft/Docker.DotNet/issues/184
+                //await this.DockerService.DockerClient.Networks.ConnectNetworkAsync(geonodeNetwork.ID, new NetworkConnectParameters {Container = "c_iiasa_gams"});
+
+                try
+                {
+                    //Debug.WriteLine("-------------------- START CONTAINER ---------------------");
+                    //var containerStarted =
+                    //    await client.Containers.StartContainerAsync(response.ID,
+                    //        new HostConfig { });
 
                     // strange exit status code behavior #3379
                     // https://github.com/docker/compose/issues/3379
@@ -481,7 +468,7 @@ namespace WebInterface.Controllers
                     // --> get output of container
 
                     //https://github.com/Microsoft/Docker.DotNet/issues/100
-
+                    /*
                     var log = await this.DockerService.DockerClient.Containers.GetContainerLogsAsync(response.ID,
                         new ContainerLogsParameters { ShowStderr = true, ShowStdout = true, Timestamps = true }, CancellationToken.None);
 
@@ -497,96 +484,80 @@ namespace WebInterface.Controllers
                         }
                         Debug.WriteLine("===============================");
                     }
+                    */
 
 
-                    if (containerStarted)
-                    {
-                        Debug.WriteLine("Container Started!!!");
+            //if (containerStarted)
+            //{
+            //    Debug.WriteLine("Container Started!!!");
 
-                        // todo: copy output
-                        // docker cp d07f55ec3f0f:/ output C:/ temp
-                    }
+            //    // todo: copy output
+            //    // docker cp d07f55ec3f0f:/ output C:/ temp
+            //}
 
-                    // Wait for container to be stopped
-                    var containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
-                    while (string.IsNullOrEmpty(containerInspectStats.State.FinishedAt))
-                    {
-                        Thread.Sleep(1000);
-                        containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
-                    }
-
-                    //var container = this.DockerService.GetContainerList().Result.FindAll(x => x.Name.Equals("iiasa_gams")).First();
-
-                    //var x = await this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
-                    //    response.ID,
-                    //    new GetArchiveFromContainerParameters
-                    //    {
-                    //        Path = "/output/output.gdx"
-                    //    }, 
-                    //    false, 
-                    //    CancellationToken.None);
-
-                    //GetArchiveFromContainerResponse result;
-                    ////while (true)
-                    ////{
-                    //    //var resultA = client.System.GetVersionAsync().Result;
-                    //    result = this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
-                    //        response.ID,
-                    //        new GetArchiveFromContainerParameters() { Path = "/output/output.gdx" },
-                    //        false,
-                    //        CancellationToken.None).Result;
-
-                    //    result.Stream.Dispose();
-                    //    Thread.Sleep(1);
-                    ////}
-
-                    //if (result == null)
-                    //{
-                    //    Debug.WriteLine("err");
-                    //}
-
-                    //var res = await this.DockerService.DockerClient.Containers.StartWithConfigContainerExecAsync(response.ID,
-                    //    new ExecConfig
-                    //    {
-                    //        Cmd =
-                    //        {
-                    //            "bin/bash",
-                    //            "-v",
-                    //            "/Output/tempOutput:/output",
-                    //            "--name",
-                    //            "iiasa_gams",
-                    //            "iiasa/gams"
-                    //        }
-                    //    },
-                    //    CancellationToken.None);
-
-                    //if (res == null)
-                    //{
-                    //    Debug.WriteLine("Error");
-                    //}
-
-                    containerStarted =
-                        await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
-                            new HostConfig { });
-
-                    //https://stackoverflow.com/questions/22907231/copying-files-from-host-to-docker-container
-
-                    //var stream =
-                    //    await this.DockerService.DockerClient.Containers.GetContainerStatsAsync(response.ID,
-                    //        new ContainerStatsParameters(), 
-                    //        CancellationToken.None);
-
-
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("=================== ERROR ===========================================================================");
-                    Debug.WriteLine(ex.Message);
-                    Debug.WriteLine("=====================================================================================================");
-                }
+            // Wait for container to be stopped
+            /*
+            var containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
+            while (string.IsNullOrEmpty(containerInspectStats.State.FinishedAt))
+            {
+                Thread.Sleep(1000);
+                containerInspectStats = await this.DockerService.DockerClient.Containers.InspectContainerAsync(response.ID);
             }
 
-            return this.View("Index", config);
+            //var container = this.DockerService.GetContainerList().Result.FindAll(x => x.Name.Equals("iiasa_gams")).First();
+
+            //var x = await this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
+            //    response.ID,
+            //    new GetArchiveFromContainerParameters
+            //    {
+            //        Path = "/output/output.gdx"
+            //    }, 
+            //    false, 
+            //    CancellationToken.None);
+
+            //GetArchiveFromContainerResponse result;
+            ////while (true)
+            ////{
+            //    //var resultA = client.System.GetVersionAsync().Result;
+            //    result = this.DockerService.DockerClient.Containers.GetArchiveFromContainerAsync(
+            //        response.ID,
+            //        new GetArchiveFromContainerParameters() { Path = "/output/output.gdx" },
+            //        false,
+            //        CancellationToken.None).Result;
+
+            //    result.Stream.Dispose();
+            //    Thread.Sleep(1);
+            ////}
+
+
+            //containerStarted =
+            //    await this.DockerService.DockerClient.Containers.StartContainerAsync(response.ID,
+            //        new HostConfig { });
+
+            //https://stackoverflow.com/questions/22907231/copying-files-from-host-to-docker-container
+
+            //var stream =
+            //    await this.DockerService.DockerClient.Containers.GetContainerStatsAsync(response.ID,
+            //        new ContainerStatsParameters(),
+            //        CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                "=================== ERROR ===========================================================================");
+            Debug.WriteLine(ex.Message); //ex.FullMessage());
+
+            if (ex.InnerException != null)
+            {
+                Debug.WriteLine(ex.InnerException.Message);
+            }
+
+            Debug.WriteLine(
+                "=====================================================================================================");
+        }
+
+        }
+                */
         }
 
         public bool CheckContainerRun()
@@ -606,7 +577,7 @@ namespace WebInterface.Controllers
                     Directory.CreateDirectory(uploads);
                 }
 
-                config.FileName = "gamslice.txt";//"licence";//config.File.FileName;
+                config.FileName = "gamslice.txt"; //"licence";//config.File.FileName;
                 var filePath = Path.Combine(uploads, config.FileName);
 
                 if (config.File.Length > 0)
@@ -653,7 +624,7 @@ namespace WebInterface.Controllers
 
             imageName = imageName.ToLower() + Guid.NewGuid().ToString().Substring(0, 4);
 
-            var outputPath = Path.GetFullPath(HomeControllerService.OutputFilePath);//"./Output/");
+            var outputPath = Path.GetFullPath(HomeControllerService.OutputFilePath); //"./Output/");
 
             var files = Directory.GetFiles(outputPath);
 
@@ -666,7 +637,10 @@ namespace WebInterface.Controllers
                 {
                     //WindowStyle = ProcessWindowStyle.Hidden,
                     FileName = "/bin/bash",
-                    Arguments = $@"docker build -t webinterface/{imageName} - < /app/Output/{HomeControllerService.OutputFolderName}/{dockerfile}",
+                    Arguments =
+                        $@"docker build -t webinterface/{imageName} - < /app/Output/{
+                                HomeControllerService.OutputFolderName
+                            }/{dockerfile}",
                     //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
                     RedirectStandardOutput = true
                 };
@@ -686,7 +660,8 @@ namespace WebInterface.Controllers
             // Todo: Get user info: dockerfile not available
         }
 
-        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")
+        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig,
+            string programRepo = "gams-docker")
         {
             if (userConfig == null)
             {
@@ -713,7 +688,8 @@ namespace WebInterface.Controllers
                     userConfig.SelectedGeoNodeDocument = geoNodeDocuments?.Documents.First().Title;
                 }
 
-                var geoNodeDocumentData = await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
+                var geoNodeDocumentData =
+                    await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
                 if (geoNodeDocumentData != null)
                 {
                     userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
@@ -789,12 +765,13 @@ namespace WebInterface.Controllers
                 return userConfig;
             }
 
-            userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version => new SelectListItem
-            {
-                Value = version.Name,
-                Text = version.Name + " [" + version.Images.First().Architecture + "]"
-            })
-            .ToList();
+            userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version =>
+                    new SelectListItem
+                    {
+                        Value = version.Name,
+                        Text = version.Name + " [" + version.Images.First().Architecture + "]"
+                    })
+                .ToList();
 
             return userConfig;
         }

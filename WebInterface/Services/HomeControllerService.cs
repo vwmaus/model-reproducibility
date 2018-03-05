@@ -7,9 +7,10 @@
     using System.IO.Compression;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc;
-    using WebInterface.Classes;
     using WebInterface.Models;
     using System.Net;
+    using ICSharpCode.SharpZipLib.GZip;
+    using ICSharpCode.SharpZipLib.Tar;
     using Newtonsoft.Json;
 
     public class HomeControllerService : ControllerBase
@@ -156,6 +157,21 @@
         public string GamsDockerfilePath { get; set; }
 
         public string ModelDockerfilePath { get; set; }
+
+        public void CreateTarGz(string tgzFilename, string fileName)
+        {
+            using (var outStream = System.IO.File.Create(tgzFilename))
+            using (var gzoStream = new GZipOutputStream(outStream))
+            using (var tarArchive = TarArchive.CreateOutputTarArchive(gzoStream))
+            {
+                tarArchive.RootPath = Path.GetDirectoryName(fileName);
+
+                var tarEntry = TarEntry.CreateEntryFromFile(fileName);
+                tarEntry.Name = Path.GetFileName(fileName);
+
+                tarArchive.WriteEntry(tarEntry, true);
+            }
+        }
 
         public string CreateGamsDockerfile(UserConfiguration config)
         {

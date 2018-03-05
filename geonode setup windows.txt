@@ -1,0 +1,23 @@
+You should run the commands in this sequence:
+
+# Build images
+docker-compose build django
+docker-compose build celery
+
+# Create containers
+docker-compose up -d
+
+# login to django container
+docker exec -it geonode_django_1 /bin/sh
+
+   # Run migration
+   python manage.py makemigrations --merge
+
+   # Leave the container
+   exit
+
+# Then run
+docker-compose exec django django-admin.py migrate --noinput
+docker-compose exec django django-admin.py loaddata sample_admin
+docker-compose exec django django-admin.py loaddata geonode/base/fixtures/default_oauth_apps_docker.json
+docker-compose exec django django-admin.py loaddata geonode/base/fixtures/initial_data.json
