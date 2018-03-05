@@ -373,13 +373,9 @@ namespace WebInterface.Controllers
             try
             {
                 //// https://github.com/Microsoft/Docker.DotNet/issues/197
-
                 const string path = @"./Output/test/DockerfileOutput/Dockerfile";
 
-                const string pathTar = @"./OutputTar/Dockerfile.tar";
-
-                var tar = Path.GetFullPath(pathTar);
-                var dockpath = Path.GetFullPath(path);
+                const string pathTar = @"./Output/test/DockerfileOutput/Dockerfile.tar";
 
                 if (!System.IO.File.Exists(pathTar))
                 {
@@ -388,26 +384,30 @@ namespace WebInterface.Controllers
 
                 hs.CreateTarGz(pathTar, path);
 
-                //hs.CreateTarGz("./Output/test/Dockerfile/Dockerfile.tar", dockpath);
-
                 using (var sr = new StreamReader(path))
                 {
                     var content = sr.ReadToEnd();
-                    Debug.WriteLine("======== DOCKERFILE START ======");
-                    Debug.WriteLine("Dockerfile Content: \n" + content);
-                    Debug.WriteLine("========= DOCKERFILE END =======");
+                    Debug.WriteLine("\n\n\n\n======== DOCKERFILE START =======================================");
+                    Debug.WriteLine("\n" + content);
+                    Debug.WriteLine("========= DOCKERFILE END ======================================\n\n\n\n\n");
                 }
+
+                //hs.DownloadZipDataToFolder("http://geonode_geonode_1/documents/3/download/", @"./OutputZip/data.zip");
 
                 var networks = await Client.Networks.ListNetworksAsync();
                 var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
 
+                var imageName = "gams/iiasa";
+                var tag = "latest";
+
+                // https://docs.docker.com/edge/engine/reference/commandline/build/
+                // https://docs.docker.com/engine/api/v1.25/#operation/ImageList
                 var imageBuildParameters = new ImageBuildParameters()
                 {
                     Remove = true,
                     ForceRemove = true,
-                    Tags = new List<string> { $@"gams/iiasa:latest"}, //{DateTime.Now.ToShortDateString()}" },
-                    BuildArgs = new Dictionary<string, string> { { "--network", "geonode_default" }},//geonodeNetwork.Name } }
-                    //Dockerfile = @"./Output/test/Dockerfile/Dockerfile"
+                    Tags = new List<string> { imageName + ":" + tag }, //{DateTime.Now.ToShortDateString()}" },
+                    Network = new List<string> { geonodeNetwork.Name },
                 };
 
                 using (var fs = new FileStream(pathTar, FileMode.Open))
@@ -429,6 +429,67 @@ namespace WebInterface.Controllers
 
                     fs.Dispose();
                 }
+
+                var containerName = imageName.Replace("/", "_") + "_container";
+
+                var containers =
+                    await Client.Containers.ListContainersAsync(new ContainersListParameters
+                    {
+                        All = true,
+                    },
+                        CancellationToken.None);
+
+                var containerList = containers.ToList();
+
+                foreach (var container in containerList)
+                {
+                    foreach (var name in container.Names)
+                    {
+                        if (name.Contains(containerName))
+                        {
+                            await Client.Containers.RemoveContainerAsync(container.ID,
+                                new ContainerRemoveParameters { Force = true });
+                        }
+                    }
+                }
+
+                var containerResponse = await Client.Containers.CreateContainerAsync(new CreateContainerParameters
+                {
+                    AttachStderr = true,
+                    AttachStdin = true,
+                    AttachStdout = true,
+                    Image = imageName,
+                    Name = containerName,
+                    //Entrypoint = new List<string>{"bin/bash", "-v", "./Result:/workspace"}
+                },
+                    CancellationToken.None);
+
+                var res = await Client.Containers.StartContainerAsync(containerResponse.ID, new ContainerStartParameters(),
+                    CancellationToken.None);
+
+                if (res)
+                {
+                    Debug.WriteLine("done");
+                }
+                else
+                {
+                    Debug.WriteLine("error");
+                }
+
+                var outputResponse = await Client.Containers.GetArchiveFromContainerAsync(containerResponse.ID,
+                    new GetArchiveFromContainerParameters
+                    {
+                        Path = "/output"
+                    },
+                    false,
+                    CancellationToken.None);
+
+                using (Stream s = System.IO.File.Create("./Result/result.tar"))
+                {
+                    outputResponse.Stream.CopyTo(s);
+                }
+
+                Debug.WriteLine("output finished!");
             }
             catch (Exception ex)
             {

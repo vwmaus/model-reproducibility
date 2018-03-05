@@ -14,13 +14,16 @@ ENV GITHUB_REPO=transport-model
 ENV GITHUB_RELEASE=v1.0
 
 # Get data version from web interface 
-ENV GEONODE_DATA=34
+ENV GEONODE_DATA=3
 
 # Clone github repository  
 RUN git clone https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git /workspace 
 
 # Set workspace 
 WORKDIR /workspace 
+
+# Create output directory
+RUN mkdir -p /output
 
 # Download data from geonode
 RUN curl -SL "http://geonode_geonode_1/documents/${GEONODE_DATA}/download" --create-dirs -o /data/data.zip

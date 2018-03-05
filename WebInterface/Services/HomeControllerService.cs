@@ -158,6 +158,17 @@
 
         public string ModelDockerfilePath { get; set; }
 
+        public void DownloadZipDataToFolder(string url, string outputFile)
+        {
+            byte[] data;
+            using (var client = new WebClient())
+            {
+                data = client.DownloadData(url);
+            }
+
+            System.IO.File.WriteAllBytes(outputFile, data);
+        }
+
         public void CreateTarGz(string tgzFilename, string fileName)
         {
             using (var outStream = System.IO.File.Create(tgzFilename))
