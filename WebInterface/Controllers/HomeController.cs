@@ -39,7 +39,8 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
-            https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
+            //https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
+
             if (Client == null)
             {
                 var dockerAddress = Environment.GetEnvironmentVariable("DOCKER_REMOTE_API");
@@ -372,28 +373,30 @@ namespace WebInterface.Controllers
             try
             {
                 //// https://github.com/Microsoft/Docker.DotNet/issues/197
-                
-                const string path = @"./Output/test/Dockerfile/Dockerfile.old";
 
-                const string pathTar = @"./Output/test/Dockerfile/Dockerfile.tar";
-                /*
-                var tar = Path.GetFullPath(pathTar);
-                var dockpath = Path.GetFullPath(path);
+                const string path = @"./Output/test/Dockerfile/";
 
-                if (!System.IO.File.Exists(pathTar))
-                {
-                    System.IO.File.Delete(pathTar);
-                }
-                
-                hs.CreateTarGz("./Output/test/Dockerfile/Dockerfile.tar", dockpath);
-                */
-                //using (var sr = new StreamReader(path))
+                const string pathTar = @"./OutputTar/Dockerfile.zip";
+
+                //var tar = Path.GetFullPath(pathTar);
+                //var dockpath = Path.GetFullPath(path);
+
+                //if (!System.IO.File.Exists(pathTar))
                 //{
-                //    var content = sr.ReadToEnd();
-                //    Debug.WriteLine("======== DOCKERFILE START ======");
-                //    Debug.WriteLine("Dockerfile Content: \n" + content);
-                //    Debug.WriteLine("========= DOCKERFILE END =======");
+                //    System.IO.File.Delete(pathTar);
                 //}
+
+                //hs.CreateTarGz(pathTar, path);
+
+                //hs.CreateTarGz("./Output/test/Dockerfile/Dockerfile.tar", dockpath);
+
+                using (var sr = new StreamReader(path))
+                {
+                    var content = sr.ReadToEnd();
+                    Debug.WriteLine("======== DOCKERFILE START ======");
+                    Debug.WriteLine("Dockerfile Content: \n" + content);
+                    Debug.WriteLine("========= DOCKERFILE END =======");
+                }
 
                 var networks = await Client.Networks.ListNetworksAsync();
                 var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));

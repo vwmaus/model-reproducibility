@@ -12,6 +12,7 @@
     using ICSharpCode.SharpZipLib.GZip;
     using ICSharpCode.SharpZipLib.Tar;
     using Newtonsoft.Json;
+    using SevenZip;
 
     public class HomeControllerService : ControllerBase
     {
@@ -164,12 +165,41 @@
             using (var gzoStream = new GZipOutputStream(outStream))
             using (var tarArchive = TarArchive.CreateOutputTarArchive(gzoStream))
             {
-                tarArchive.RootPath = Path.GetDirectoryName(fileName);
+                //tarArchive.RootPath = Path.GetDirectoryName(fileName);
 
                 var tarEntry = TarEntry.CreateEntryFromFile(fileName);
                 tarEntry.Name = Path.GetFileName(fileName);
 
                 tarArchive.WriteEntry(tarEntry, true);
+            }
+        }
+
+        public void CreateTar(string inputFile, string tgzFilename)
+        {
+            //https://stackoverflow.com/questions/3108205/how-would-i-use-sevenzipsharp-with-this-code
+            try
+            {
+                //if (System.IO.File.Exists(@"./Output/7z.dll"))
+                //{
+
+                //}
+                //else
+                //{
+                //    var files = Directory.GetFiles(@"./Output/");
+                //}
+
+                //SevenZipBase.SetLibraryPath(@"./Output/7z.dll");
+                var szc = new SevenZipCompressor
+                {
+                    CompressionMode = SevenZip.CompressionMode.Create,
+                    ArchiveFormat = OutArchiveFormat.Tar
+                };
+
+                szc.CompressDirectory(inputFile, tgzFilename);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
             }
         }
 
