@@ -374,19 +374,19 @@ namespace WebInterface.Controllers
             {
                 //// https://github.com/Microsoft/Docker.DotNet/issues/197
 
-                const string path = @"./Output/test/Dockerfile/";
+                const string path = @"./Output/test/DockerfileOutput/Dockerfile";
 
-                const string pathTar = @"./OutputTar/Dockerfile.zip";
+                const string pathTar = @"./OutputTar/Dockerfile.tar";
 
-                //var tar = Path.GetFullPath(pathTar);
-                //var dockpath = Path.GetFullPath(path);
+                var tar = Path.GetFullPath(pathTar);
+                var dockpath = Path.GetFullPath(path);
 
-                //if (!System.IO.File.Exists(pathTar))
-                //{
-                //    System.IO.File.Delete(pathTar);
-                //}
+                if (!System.IO.File.Exists(pathTar))
+                {
+                    System.IO.File.Delete(pathTar);
+                }
 
-                //hs.CreateTarGz(pathTar, path);
+                hs.CreateTarGz(pathTar, path);
 
                 //hs.CreateTarGz("./Output/test/Dockerfile/Dockerfile.tar", dockpath);
 
