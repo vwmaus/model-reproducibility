@@ -1,20 +1,20 @@
-FROM iiasa/gams:#GAMS_VERSION#
+FROM iiasa/gams:latest
 MAINTAINER "Victor Maus" maus@iiasa.ac.at
 
 # Gams license path
 ENV LICENSE_PATH=#LICENSE_PATH#
 
 # Get github repository from web inteface
-ENV GITHUB_USER=#GITHUB_USER#
+ENV GITHUB_USER=ptrkrnstnr
 
 # Get github repository from web interface 
-ENV GITHUB_REPO=#MODEL#
+ENV GITHUB_REPO=transport-model
 
 # Get model version from web interface 
-ENV GITHUB_RELEASE=#MODEL_VERSION#
+ENV GITHUB_RELEASE=v1.0
 
 # Get data version from web interface 
-ENV GEONODE_DATA=#DATA_VERSION#
+ENV GEONODE_DATA=3
 
 # Clone github repository  
 RUN git clone https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git /workspace 

@@ -1,4 +1,4 @@
-﻿#define testrun
+﻿//#define testrun
 //#define exchangeEnvironmentVariables
 
 namespace WebInterface.Controllers
@@ -346,6 +346,12 @@ namespace WebInterface.Controllers
             return this.View("Index", config);
         }
 
+        [HttpPost]
+        public IActionResult DownloadResult()
+        {
+            return this.View("Index");
+        }
+
         public async Task RunScriptAsync(UserConfiguration config)
         {
             var hs = new HomeControllerService();
@@ -407,7 +413,7 @@ namespace WebInterface.Controllers
                     Remove = true,
                     ForceRemove = true,
                     Tags = new List<string> { imageName + ":" + tag }, //{DateTime.Now.ToShortDateString()}" },
-                    Network = new List<string> { geonodeNetwork.Name },
+                    NetworkMode = geonodeNetwork.Name,
                 };
 
                 using (var fs = new FileStream(pathTar, FileMode.Open))
