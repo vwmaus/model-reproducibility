@@ -466,9 +466,8 @@ namespace WebInterface.Controllers
                     AttachStdout = true,
                     Image = imageName,
                     Name = containerName,
-                    //Entrypoint = new List<string>{"bin/bash", "-v", "./Result:/workspace"}
                 },
-                    CancellationToken.None);
+                CancellationToken.None);
 
                 var res = await Client.Containers.StartContainerAsync(containerResponse.ID, new ContainerStartParameters(),
                     CancellationToken.None);
@@ -630,11 +629,6 @@ namespace WebInterface.Controllers
                 */
         }
 
-        public bool CheckContainerRun()
-        {
-            return true;
-        }
-
         public async void UploadFile(UserConfiguration config)
         {
             //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
@@ -659,24 +653,6 @@ namespace WebInterface.Controllers
                 }
             }
         }
-
-        //public async Task<IList<ContainerListResponse>> GetDockerContainers()
-        //{
-        //    // https://docs.docker.com/docker-for-windows/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
-        //    // https://github.com/stefanprodan/dockerdash
-        // // https://medium.com/lucjuggery/about-var-run-docker-sock-3bfd276e12fd
-
-        //    DockerClient client2 = new DockerClientConfiguration(new Uri("tcp://localhost:2375"))
-        //        .CreateClient();
-
-        //    return await client2.Containers.ListContainersAsync(
-        //        new ContainersListParameters()
-        //        {
-        //            Limit = 10,
-        //        });
-
-        //    //var images2 = client2.Images.ListImagesAsync(new ImagesListParameters() { All = true }, CancellationToken.None);
-        //}
 
         public IActionResult BuildImage(UserConfiguration config, string imageName = "")
         {
