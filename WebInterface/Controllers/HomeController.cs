@@ -349,7 +349,11 @@ namespace WebInterface.Controllers
         [HttpPost]
         public IActionResult DownloadResult()
         {
-            return this.View("Index");
+            var hs = new HomeControllerService();
+
+            var downloadPath = $@"./Result/result.tar";
+
+            return System.IO.File.Exists(downloadPath) ? hs.DownloadFile(downloadPath, "result.tar") : this.View("Index");
         }
 
         public async Task RunScriptAsync(UserConfiguration config)
