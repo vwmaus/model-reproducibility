@@ -343,7 +343,9 @@ namespace WebInterface.Controllers
 
             await this.RunScriptAsync(config);
 
-            return this.View("Index", config);
+            return this.DownloadResult();
+
+            //return this.View("Index", config);
         }
 
         [HttpPost]
