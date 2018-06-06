@@ -89,9 +89,9 @@ namespace WebInterface.Controllers
             // Read Dockerfile Content
             using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath,
                     HomeControllerService.DockerFileName)))
-                {
-                    fileContent = reader.ReadToEnd();
-                }
+            {
+                fileContent = reader.ReadToEnd();
+            }
 #endif
 
             // Parse Dockerfile Content
@@ -161,14 +161,13 @@ namespace WebInterface.Controllers
                 .Split(" ")
                 .ToList();
 
-            var pattern = @"([""'])(?:(?=(\\?))\2.)*?\1";
-            string first = lines.FirstOrDefault(x => x.StartsWith("ENTRYPOINT"));
+            const string pattern = @"([""'])(?:(?=(\\?))\2.)*?\1";
+            var first = lines.FirstOrDefault(x => x.StartsWith("ENTRYPOINT"));
             if (first != null)
             {
                 entrypoint = Regex.Matches(first, pattern)
                     .Select(match => match.Value.Replace("\"", string.Empty)).ToList();
             }
-
 
             // Todo: add copy licence
 
@@ -312,6 +311,15 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
+        public IActionResult UploadModelData(UserConfiguration config)
+        {
+            this.UploadModelInputData(config);
+
+            return this.RedirectToAction("Index", config);
+            //return View("Index", config);
+        }
+
+        [HttpPost]
         public IActionResult DownloadDockerfiles(UserConfiguration config)
         {
             var hs = new HomeControllerService();
@@ -341,11 +349,15 @@ namespace WebInterface.Controllers
                 return this.View("Index", config);
             }
 
-            await this.RunScriptAsync(config);
+            var success = await this.RunScriptAsync(config);
 
-            return this.DownloadResult();
+            if (success)
+            {
+                return this.DownloadResult();
+            }
 
-            //return this.View("Index", config);
+            // todo: error
+            return this.View("Index", config);
         }
 
         [HttpPost]
@@ -358,7 +370,7 @@ namespace WebInterface.Controllers
             return System.IO.File.Exists(downloadPath) ? hs.DownloadFile(downloadPath, "result.tar") : this.View("Index");
         }
 
-        public async Task RunScriptAsync(UserConfiguration config)
+        public async Task<bool> RunScriptAsync(UserConfiguration config)
         {
             var hs = new HomeControllerService();
 
@@ -501,6 +513,8 @@ namespace WebInterface.Controllers
                 }
 
                 Debug.WriteLine("output finished!");
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -515,6 +529,8 @@ namespace WebInterface.Controllers
 
                 Debug.WriteLine(
                     "=====================================================================================================");
+
+                return false;
             }
 
             /*
@@ -660,6 +676,36 @@ namespace WebInterface.Controllers
             }
         }
 
+        public async void UploadModelInputData(UserConfiguration config)
+        {
+            //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
+            if (config.ModelInputDataFile != null)
+            {
+                var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads");
+
+                if (!Directory.Exists(uploads))
+                {
+                    Directory.CreateDirectory(uploads);
+                }
+
+                config.ModelInputDataFile = "modelInputData.zip"; //"licence";//config.File.FileName;
+                var filePath = Path.Combine(uploads, config.ModelInputDataFile);
+
+                if (System.IO.File.Exists(config.ModelInputDataFile))
+                {
+                    System.IO.File.Delete(config.ModelInputDataFile);
+                }
+
+                if (config.ModelDataFile.Length > 0)
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await config.ModelDataFile.CopyToAsync(stream);
+                    }
+                }
+            }
+        }
+
         public IActionResult BuildImage(UserConfiguration config, string imageName = "")
         {
             // https://docs.docker.com/engine/reference/builder/
@@ -722,36 +768,37 @@ namespace WebInterface.Controllers
 
             var homeControllerService = new HomeControllerService();
 
-            if (userConfig.GeoNodeDocuments.Count == 0)
-            {
-                var geoNodeDocuments = await homeControllerService.GetGeonodeData();
-                if (geoNodeDocuments != null)
-                {
-                    userConfig.GeoNodeDocuments = geoNodeDocuments.Documents.Select(document => new SelectListItem
-                    {
-                        Value = document.Id.ToString(),
-                        Text = document.Title
-                    })
-                        .ToList();
-                }
+            //if (userConfig.GeoNodeDocuments.Count == 0)
+            //{
+            //    var geoNodeDocuments = await homeControllerService.GetGeonodeData();
+            //    if (geoNodeDocuments != null)
+            //    {
+            //        userConfig.GeoNodeDocuments = geoNodeDocuments.Documents.Select(document => new SelectListItem
+            //        {
+            //            Value = document.Id.ToString(),
+            //            Text = document.Title
+            //        })
+            //            .ToList();
+            //    }
 
-                if (string.IsNullOrEmpty(userConfig.SelectedGeoNodeDocument))
-                {
-                    userConfig.SelectedGeoNodeDocument = geoNodeDocuments?.Documents.First().Title;
-                }
+            //    if (string.IsNullOrEmpty(userConfig.SelectedGeoNodeDocument))
+            //    {
+            //        userConfig.SelectedGeoNodeDocument = geoNodeDocuments?.Documents.First().Title;
+            //    }
 
-                var geoNodeDocumentData =
-                    await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
-                if (geoNodeDocumentData != null)
-                {
-                    userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
-                    {
-                        Value = keyword.ToString(),
-                        Text = keyword.ToString()
-                    }
-                    ).ToList();
-                }
-            }
+            //    var geoNodeDocumentData =
+            //        await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
+
+            //    if (geoNodeDocumentData != null)
+            //    {
+            //        userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
+            //        {
+            //            Value = keyword.ToString(),
+            //            Text = keyword.ToString()
+            //        }
+            //        ).ToList();
+            //    }
+            //}
 
             // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
             var repositories = await homeControllerService.GetGithubRepositories(userConfig.GitHubUser);

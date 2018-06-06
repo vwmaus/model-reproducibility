@@ -39,7 +39,7 @@
         <div class="form-group">
             @Html.LabelFor(m => m.GitHubUser, "GitHub User ID")
             @Html.ValidationMessageFor(m => m.GitHubUser)
-            @Html.TextBoxFor(m => m.GitHubUser, new { @class = "form-control", @id = "githubUser", @Value = "vwmaus", @type = "text" })
+            @Html.TextBoxFor(m => m.GitHubUser, new { @class = "form-control", @id = "githubUser", @type = "text" })
         </div>
 
         <div class="form-group">
@@ -54,7 +54,7 @@
             @Html.DropDownListFor(m => m.SelectedGithubRepositoryVersion, Model.GithubRepositoryVersions, new { @class = "form-control", @id = "modelversion" })
         </div>
 
-        <div class="form-group">
+        @*<div class="form-group">
             @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
             @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
             @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
@@ -64,7 +64,7 @@
             @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
             @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
             @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
-        </div>
+        </div>*@
 
         @*<div class="form-group">
                 @Html.LabelFor(m => m.LicencePath, "Licence Path")
@@ -74,13 +74,25 @@
             </div>*@
 
         <div class="form-group">
-            <label for="uploadLicenceFile">Upload licence file</label>
+            @Html.LabelFor(m => m.ModelInputDataUrl, "Insert Model Input Data Source (URL) or Upload Model Data (.zip)")
+            @Html.ValidationMessageFor(m => m.ModelInputDataUrl)
+            @Html.TextBoxFor(m => m.ModelInputDataUrl, new { @class = "form-control", @id = "modelInputData", @type = "url" })
+        </div>
+
+        <div class="form-group">
+            <span><input asp-for="ModelDataFile" class="form-control-file" id="uploadModelDataFile" /><b id="uploadFile"></b></span>
+            <br />
+            <input type="submit" value="Upload Model Input Data" class="btn btn-info" asp-action="UploadModelData" asp-controller="Home" />
+        </div>
+
+        <div class="form-group">
+            <label for="uploadLicenceFile">Upload Licence File</label>
         <span><input asp-for="File" class="form-control-file" id="uploadLicenceFile" /><b id="uploadFile"></b></span>
             <br />
             <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />
         </div>
 
-        <div class="form-check">
+        @*<div class="form-check">
 
             <div>
                 @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
@@ -91,7 +103,7 @@
                 @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
                 @Html.LabelFor(m => m.DownloadResult, "Download Result")
             </div>
-        </div>
+        </div>*@
 
         <br />
         <div id="downloadSection">
@@ -99,9 +111,9 @@
                 <input type="submit" value="Download Dockerfiles" class="btn btn-light" asp-action="DownloadDockerfiles" asp-controller="Home" />
             </div>
 
-            <div class="form-group">
+            @*<div class="form-group">
                 <a id="btn_downloadGeonodeData" class="btn btn-light">Download Geonode File</a>
-            </div>
+            </div>*@
         </div>
 
         @*<div class="form-group">

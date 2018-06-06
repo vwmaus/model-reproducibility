@@ -306,7 +306,7 @@ $(document).ready(function () {
 
     $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
 
-    $("#githubUser").val("vwmaus");
+    //$("#githubUser").val("vwmaus");
     $("#licensePath").val("");
 
     // Set change event

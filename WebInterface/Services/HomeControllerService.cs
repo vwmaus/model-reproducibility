@@ -215,8 +215,8 @@
                 .Replace(gamsVersionPlaceholder, config.SelectedProgramVersion)
                 .Replace(githubUserPlaceholder, config.GitHubUser)
                 .Replace(modelPlaceholder, config.SelectedGithubRepository)
-                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion)
-                .Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
+                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion);
+                //.Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
 
             //if (string.IsNullOrEmpty(licencePath))
             //{
