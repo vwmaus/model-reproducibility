@@ -1,4 +1,6 @@
-﻿namespace WebInterface.Services
+﻿using WebInterface.Classes;
+
+namespace WebInterface.Services
 {
     using System;
     using System.Collections.Generic;
@@ -197,14 +199,17 @@
             const string modelPlaceholder = "#MODEL#";
             const string modelVersionPlaceholder = "#MODEL_VERSION#";
             const string geonodeDataVersionPlaceholder = "#DATA_VERSION#";
+            const string inputDataFilePathPlaceholder = "#INPUT_DATA_FILE_PATH#";
 
             //const string dockerFileName = "Dockerfile-model";
 
-            const string licencePlaceholder = "#GAMS_LICENSE#";
+            const string licencePlaceholder = "#LICENSE_PATH#";
 
             string dockerfileContent;
 
             var dockerTemplate = TemplatePath + DockerFileName;
+
+            Debug.WriteLine("Dockerfile-Path: " + Path.GetFullPath(dockerTemplate));
 
             using (var reader = new StreamReader(dockerTemplate))
             {
@@ -215,36 +220,64 @@
                 .Replace(gamsVersionPlaceholder, config.SelectedProgramVersion)
                 .Replace(githubUserPlaceholder, config.GitHubUser)
                 .Replace(modelPlaceholder, config.SelectedGithubRepository)
-                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion);
-                //.Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
+                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion)
+                .Replace(inputDataFilePathPlaceholder, config.ModelInputDataFile)
+                .Replace(licencePlaceholder, config.LicencePath);
+            //.Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
 
-            //if (string.IsNullOrEmpty(licencePath))
-            //{
-            //    dockerfileContent = dockerfileContent.Replace(@"COPY ${GAMS_LICENSE} /opt/gams/gamslice.txt", "# No licence file found or entered!");
-            //}
-            //else
-            //{
-            //    licencePath = licencePath.Replace(@"\", "/");
+            if (string.IsNullOrEmpty(config.LicencePath))
+            {
+                dockerfileContent = dockerfileContent.Replace(@"COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt",
+                    "# No licence file found or entered!");
+            }
+            else
+            {
+                config.LicencePath = config.LicencePath.Replace(@"\", "/");
+            }
 
-            //    dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
-            //}
+            if (string.IsNullOrEmpty(config.ModelInputDataFile))
+            {
+                // No input data provided
 
-            //dockerfileContent = dockerfileContent
-            //    .Replace(bitArchitecturePlaceholder, architecture)
-            //    .Replace(gamsVersionPlaceholder, version);
+                dockerfileContent = dockerfileContent.Replace(@"COPY ${INPUT_DATA_FILE_PATH} /workspace/data.zip",
+                    "# No model input data file uploaded");
 
-            //if (string.IsNullOrEmpty(OutputFilePath))
-            //{
+                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${INPUT_DATA_FILE_PATH} --create-dirs -o /workspace/data.zip",
+                    "# No URL for model input data file provided");
 
-            //    OutputFilePath = $@"./Output/{OutputFolderName}";
-            //}
+                dockerfileContent = dockerfileContent.Replace(@"RUN unzip -o /workspace/data.zip -d /workspace/data",
+                    "# No input data file provided");
+            }
+            else if (config.ModelInputDataFile.EndsWith(".zip"))
+            {
+                // Input data is URL or wrong file (no zip file provided)
+                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${INPUT_DATA_FILE_PATH} --create-dirs -o /workspace/data.zip",
+                    "# No URL for model input data file provided");
+            }
 
-            //if (!Directory.Exists(OutputFilePath))
-            //{
-            //    Directory.CreateDirectory(OutputFilePath);
-            //}
+
+            //    dockerfileContent = dockerfileContent.Replace(licencePlaceholder, config.LicencePath);
+                //}
+
+                //dockerfileContent = dockerfileContent
+                //    .Replace(bitArchitecturePlaceholder, architecture)
+                //    .Replace(gamsVersionPlaceholder, version);
+
+                //if (string.IsNullOrEmpty(OutputFilePath))
+                //{
+
+                //    OutputFilePath = $@"./Output/{OutputFolderName}";
+                //}
+
+                //if (!Directory.Exists(OutputFilePath))
+                //{
+                //    Directory.CreateDirectory(OutputFilePath);
+                //}
+
+
 
             var outputfile = Path.Combine(DockerFilePath, DockerFileName);
+
             System.IO.File.CreateText(outputfile);
 
             System.IO.File.WriteAllText(outputfile, dockerfileContent);

@@ -1,6 +1,9 @@
 ﻿//#define testrun
 //#define exchangeEnvironmentVariables
 
+using System.Reflection.Metadata;
+using System.Runtime.InteropServices.ComTypes;
+
 namespace WebInterface.Controllers
 {
     using System.Collections.Generic;
@@ -379,6 +382,8 @@ namespace WebInterface.Controllers
 
             this.UploadFile(config);
 
+            this.UploadModelInputData(config);
+
             // Todo: change x64 -> parse from program version of form
             var programDockerfilePath = hs.CreateGamsDockerfile(config);
             var fullpat = Path.GetFullPath(programDockerfilePath);
@@ -397,16 +402,23 @@ namespace WebInterface.Controllers
             try
             {
                 //// https://github.com/Microsoft/Docker.DotNet/issues/197
-                const string path = @"./Output/test/DockerfileOutput/Dockerfile";
+                var path = fullpat; //@"./Output/test/DockerfileOutput/Dockerfile";
 
-                const string pathTar = @"./Output/test/DockerfileOutput/Dockerfile.tar";
+                var tarFile = Path.Combine(Path.GetDirectoryName(path), "Dockerfile.tar");
 
-                if (!System.IO.File.Exists(pathTar))
+                //var pathTar = @"./Output/test/DockerfileOutput/Dockerfile.tar";
+
+                if (!System.IO.File.Exists(tarFile))
                 {
-                    System.IO.File.Delete(pathTar);
+                    System.IO.File.Delete(tarFile);
                 }
 
-                hs.CreateTarGz(pathTar, path);
+                hs.CreateTarGz(tarFile, path);
+                //if (!System.IO.File.Exists(pathTar))
+                //{
+                //    System.IO.File.Delete(pathTar);
+                //}
+                //hs.CreateTarGz(pathTar, path);
 
                 using (var sr = new StreamReader(path))
                 {
@@ -432,9 +444,10 @@ namespace WebInterface.Controllers
                     ForceRemove = true,
                     Tags = new List<string> { imageName + ":" + tag }, //{DateTime.Now.ToShortDateString()}" },
                     NetworkMode = geonodeNetwork.Name,
+                    NoCache = true
                 };
 
-                using (var fs = new FileStream(pathTar, FileMode.Open))
+                using (var fs = new FileStream(tarFile, FileMode.Open))
                 {
                     // https://stackoverflow.com/questions/33997089/how-can-i-create-a-stream-for-dockerdotnet-buildimagefromdockerfile-method
                     var statusUpdate = await Client.Images.BuildImageFromDockerfileAsync(
@@ -663,8 +676,15 @@ namespace WebInterface.Controllers
                     Directory.CreateDirectory(uploads);
                 }
 
-                config.FileName = "gamslice.txt"; //"licence";//config.File.FileName;
-                var filePath = Path.Combine(uploads, config.FileName);
+                const string filename = "gamslice.txt"; //"licence";//config.File.FileName;
+                var filePath = Path.Combine(uploads, filename);
+
+                config.FileName = Path.Combine(Path.GetDirectoryName(filePath), filename);
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
 
                 if (config.File.Length > 0)
                 {
@@ -679,29 +699,33 @@ namespace WebInterface.Controllers
         public async void UploadModelInputData(UserConfiguration config)
         {
             //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
-            if (config.ModelInputDataFile != null)
+            if (config.ModelDataFile == null)
             {
-                var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads");
+                return;
+            }
 
-                if (!Directory.Exists(uploads))
+            var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads/model_input_data");
+
+            if (!Directory.Exists(uploads))
+            {
+                Directory.CreateDirectory(uploads);
+            }
+
+            const string filename = "modelInputData.zip"; //"licence";//config.File.FileName;
+            var filePath = Path.Combine(uploads, filename);
+
+            config.ModelInputDataFile = Path.Combine("././", Path.GetDirectoryName(filePath), filename);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            if (config.ModelDataFile.Length > 0)
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    Directory.CreateDirectory(uploads);
-                }
-
-                config.ModelInputDataFile = "modelInputData.zip"; //"licence";//config.File.FileName;
-                var filePath = Path.Combine(uploads, config.ModelInputDataFile);
-
-                if (System.IO.File.Exists(config.ModelInputDataFile))
-                {
-                    System.IO.File.Delete(config.ModelInputDataFile);
-                }
-
-                if (config.ModelDataFile.Length > 0)
-                {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await config.ModelDataFile.CopyToAsync(stream);
-                    }
+                    await config.ModelDataFile.CopyToAsync(stream);
                 }
             }
         }

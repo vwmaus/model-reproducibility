@@ -13,8 +13,6 @@ namespace WebInterface.Models
 
         public string FileName { get; set; }
 
-        public string ModelInputDataFile { get; set; }
-
         public List<SelectListItem> GithubRepositories { get; set; }
 
         [Required(ErrorMessage = "The model is required.")]
@@ -78,7 +76,7 @@ namespace WebInterface.Models
             set => this.dockerhubProgramRepository = value;
         }
 
-        public string ModelInputDataUrl { get; set; }
+        public string ModelInputDataFile { get; set; }
 
         public bool SaveToDatabase { get; set; }
 
@@ -96,6 +94,7 @@ namespace WebInterface.Models
             this.Programs = new List<SelectListItem>();
             this.GeonodeModelTags = new List<SelectListItem>();
 
+            this.ModelInputDataFile = string.Empty;
             this.LicencePath = string.Empty;
             this.SelectedProgramVersion = string.Empty;
             //this.SelectedGeoNodeDocument = string.Empty;
