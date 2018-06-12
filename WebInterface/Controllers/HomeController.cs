@@ -404,7 +404,7 @@ namespace WebInterface.Controllers
                 //// https://github.com/Microsoft/Docker.DotNet/issues/197
                 var path = fullpat; //@"./Output/test/DockerfileOutput/Dockerfile";
 
-                var tarFile = Path.Combine(Path.GetDirectoryName(path), "Dockerfile.tar");
+                var tarFile = "Dockerfile.tar";//Path.Combine(Path.GetDirectoryName(path), "Dockerfile.tar");
 
                 //var pathTar = @"./Output/test/DockerfileOutput/Dockerfile.tar";
 
@@ -679,7 +679,9 @@ namespace WebInterface.Controllers
                 const string filename = "gamslice.txt"; //"licence";//config.File.FileName;
                 var filePath = Path.Combine(uploads, filename);
 
-                config.FileName = Path.Combine(Path.GetDirectoryName(filePath), filename);
+                config.FileName = "http://webinterface/uploads/model_input_data/" + filename;
+                config.LicencePath = config.FileName;
+                //Path.Combine(Path.GetDirectoryName(filePath), filename);
 
                 if (System.IO.File.Exists(filePath))
                 {
@@ -714,7 +716,7 @@ namespace WebInterface.Controllers
             const string filename = "modelInputData.zip"; //"licence";//config.File.FileName;
             var filePath = Path.Combine(uploads, filename);
 
-            config.ModelInputDataFile = Path.Combine("././", Path.GetDirectoryName(filePath), filename);
+            config.ModelInputDataFile = "http://webinterface/uploads/model_input_data/" + filename;
 
             if (System.IO.File.Exists(filePath))
             {

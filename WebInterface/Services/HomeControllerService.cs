@@ -198,7 +198,7 @@ namespace WebInterface.Services
             const string githubUserPlaceholder = "#GITHUB_USER#";
             const string modelPlaceholder = "#MODEL#";
             const string modelVersionPlaceholder = "#MODEL_VERSION#";
-            const string geonodeDataVersionPlaceholder = "#DATA_VERSION#";
+            //const string geonodeDataVersionPlaceholder = "#DATA_VERSION#";
             const string inputDataFilePathPlaceholder = "#INPUT_DATA_FILE_PATH#";
 
             //const string dockerFileName = "Dockerfile-model";
@@ -229,6 +229,9 @@ namespace WebInterface.Services
             {
                 dockerfileContent = dockerfileContent.Replace(@"COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt",
                     "# No licence file found or entered!");
+
+                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${LICENSE_PATH} --create-dirs -o /opt/gams/gams/gamslice.txt",
+                    "# No licence file found or entered!");
             }
             else
             {
@@ -248,12 +251,12 @@ namespace WebInterface.Services
                 dockerfileContent = dockerfileContent.Replace(@"RUN unzip -o /workspace/data.zip -d /workspace/data",
                     "# No input data file provided");
             }
-            else if (config.ModelInputDataFile.EndsWith(".zip"))
-            {
-                // Input data is URL or wrong file (no zip file provided)
-                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${INPUT_DATA_FILE_PATH} --create-dirs -o /workspace/data.zip",
-                    "# No URL for model input data file provided");
-            }
+            //else if (config.ModelInputDataFile.EndsWith(".zip"))
+            //{
+            //    // Input data is URL or wrong file (no zip file provided)
+            //    dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${INPUT_DATA_FILE_PATH} --create-dirs -o /workspace/data.zip",
+            //        "# No URL for model input data file provided");
+            //}
 
 
             //    dockerfileContent = dockerfileContent.Replace(licencePlaceholder, config.LicencePath);
@@ -273,8 +276,6 @@ namespace WebInterface.Services
                 //{
                 //    Directory.CreateDirectory(OutputFilePath);
                 //}
-
-
 
             var outputfile = Path.Combine(DockerFilePath, DockerFileName);
 
