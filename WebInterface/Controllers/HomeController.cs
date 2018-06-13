@@ -60,6 +60,7 @@ namespace WebInterface.Controllers
 
         public void SetDefaultConfig(UserConfiguration config)
         {
+            config.GitHubUser = "ptrkrnstnr";
             config.GithubRepositories.Add(new SelectListItem { Text = "transport-model", Value = "transport-model" });
             config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v1.0", Value = "v1.0" });
             config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v2.0", Value = "v2.0" });
@@ -69,224 +70,6 @@ namespace WebInterface.Controllers
         public ActionResult Messages()
         {
             return this.PartialView("Messages", GlobalData.Messages);
-        }
-
-        public async Task<CreateContainerResponse> CreateDockerModelContainer(UserConfiguration config)
-        {
-            // https://github.com/Microsoft/Docker.DotNet/issues/134
-            // https://github.com/Microsoft/Docker.DotNet/issues/270
-            // https://github.com/Microsoft/Docker.DotNet/issues/212
-
-            // TODO: Share network (docker build --network geonode_default -t test_iiasagams .)
-
-
-            string fileContent;
-
-#if testrun
-            // Read Dockerfile Content
-            using (var reader = new StreamReader(@"./Output/test/Dockerfile/Dockerfile"))
-            {
-                fileContent = reader.ReadToEnd();
-            }
-#else
-            // Read Dockerfile Content
-            using (var reader = new StreamReader(Path.Combine(HomeControllerService.DockerFilePath,
-                    HomeControllerService.DockerFileName)))
-            {
-                fileContent = reader.ReadToEnd();
-            }
-#endif
-
-            // Parse Dockerfile Content
-            var lines = Regex.Split(fileContent, "\r\n|\r|\n").ToList();
-
-            var image = lines.First(x => x.StartsWith("FROM")).Split("FROM")[1].Trim();
-            var parent = image.Split(":")[0].Trim();
-            var tag = image.Split(":")[1].Trim();
-
-            var report = new Progress<JSONMessage>(msg =>
-            {
-                var message = $"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}";
-
-                Logger.Log(message);
-            });
-
-            // Pull Dockerfile Reference image
-            await Client.Images.CreateImageAsync(new ImagesCreateParameters
-            {
-                FromImage = image,
-            }, new AuthConfig(), report
-            );
-
-            //new ImageLoadParameters() {Parent = parent, Tag = tag}, new AuthConfig());
-
-            // Get stream output
-            //using (var reader = new StreamReader(statusUpdate))
-            //{
-            //    string line;
-            //    while ((line = reader.ReadLine()) != null)
-            //    {
-            //        Logger.Log(line);
-            //    }
-            //}
-
-            var containerName = $"c_{image.Split(":")[0].Replace("/", "_")}";
-            var containers =
-                await Client.Containers.ListContainersAsync(new ContainersListParameters(),
-                    CancellationToken.None);
-
-            if (containers.ToList().Exists(x => x.Names.Contains(containerName)))
-            {
-                var container = containers.FirstOrDefault(x => x.Names.Contains(containerName));
-                if (container != null)
-                {
-                    await Client.Containers.RemoveContainerAsync(container.ID,
-                        new ContainerRemoveParameters { Force = true });
-                }
-            }
-
-            //var maintainer = lines.First(x => x.StartsWith("MAINTAINER")).Split("MAINTAINER")[1].Trim();
-            var envVariables = lines.Where(x => x.StartsWith("ENV"))
-                .Select(envVariable => envVariable.Split("ENV")[1].Trim()).ToList();
-            var workingdir = lines.FirstOrDefault(x => x.StartsWith("WORKDIR"))?.Split("WORKDIR")[1].Trim();
-
-            // Brackets regex
-            //var pattern = @"^(\[){1}(.*?)(\]){1}$";
-
-            // Get entrypoint line & remove brackets
-            var entrypoint = lines.FirstOrDefault(x =>
-                    x.StartsWith("ENTRYPOINT"))
-                ?.Replace("[", string.Empty)
-                .Replace("]", string.Empty)
-                .Replace("\"", string.Empty)
-                .Replace(",", string.Empty)
-                .Split("ENTRYPOINT")[1]
-                .Trim()
-                .Split(" ")
-                .ToList();
-
-            const string pattern = @"([""'])(?:(?=(\\?))\2.)*?\1";
-            var first = lines.FirstOrDefault(x => x.StartsWith("ENTRYPOINT"));
-            if (first != null)
-            {
-                entrypoint = Regex.Matches(first, pattern)
-                    .Select(match => match.Value.Replace("\"", string.Empty)).ToList();
-            }
-
-            // Todo: add copy licence
-
-            // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
-            var cmds = new[] { "RUN" }; //, "COPY", "ADD"};
-
-            //var result = lines.Where(l => cmds.All(l.StartsWith)).ToList();
-
-            var linesNew = new List<string>();
-            foreach (var l in lines)
-            {
-                var l1 = l.Replace("[", string.Empty).Replace("]", string.Empty).Replace("\"", string.Empty)
-                    .Replace(",", string.Empty);
-                linesNew.AddRange(from cmd in cmds where l1.StartsWith(cmd) select l);
-            }
-
-            var runCmds = new List<string>();
-            foreach (var item in linesNew.Where(x => x.StartsWith("RUN"))
-                .Select(envVariable => envVariable.Split("RUN")[1].Trim().Split(" ").ToList()))
-            {
-                runCmds.AddRange(item);
-            }
-
-            var env = envVariables.Select(str => str.Split("="))
-                .Select(envSplit => new KeyValuePair<string, string>(envSplit[0], envSplit[1])).ToList();
-
-#if exchangeEnvironmentVariables
-            foreach (var envVar in env)
-            {
-                for (var index = 0; index < runCmds.Count; index++)
-                {
-                    var command = runCmds[index];
-
-                    if (!command.Contains(envVar.Key))
-                    {
-                        continue;
-                    }
-
-                    runCmds[index] = command.Replace("${" + envVar.Key + "}", envVar.Value);
-                    //index = 0; // check from beginning 
-                    //i = 0;
-                }
-            }
-#endif
-
-            // Remove license copy-command if the user didn't provide a license
-            foreach (var item in env)
-            {
-                if (item.Key.ToUpper().Contains("LICEN")) // LICENSE or LICENCE
-                {
-                    if (item.Value.Contains("#LICEN"))
-                    {
-                        foreach (var cmd in runCmds.ToList())
-                        {
-                            if (cmd.ToUpper().StartsWith("COPY ${LICEN"))
-                            {
-                                runCmds.Remove(cmd);
-                            }
-                        }
-                    }
-                }
-            }
-
-            CreateContainerResponse response = null;
-
-            //entrypoint.AddRange(new List<string> {"-v", "C:Temp/output:/output"});
-            var newEntry = new List<string>();
-            newEntry.AddRange(runCmds);
-            newEntry.AddRange(entrypoint.IsNull() ? new List<string>() : entrypoint);
-
-            // https://stackoverflow.com/questions/42857897/execute-a-script-before-cmd/42858351
-            // CMD & ENTRYPOINT
-
-            try
-            {
-                //https://github.com/Microsoft/Docker.DotNet/issues/212
-                // https://docs.docker.com/v17.09/engine/userguide/eng-image/dockerfile_best-practices/#build-cache
-
-                var networks = await Client.Networks.ListNetworksAsync();
-                var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
-
-                response = Client.Containers.CreateContainerAsync(
-                    new CreateContainerParameters
-                    {
-                        Image = image,
-                        AttachStderr = true,
-                        AttachStdin = true,
-                        AttachStdout = true,
-                        Tty = true,
-                        NetworkingConfig = new NetworkingConfig
-                        {
-                            //EndpointsConfig = 
-                        },
-                        OnBuild = new List<string>(),
-                        Env = envVariables,
-                        WorkingDir = workingdir,
-                        Entrypoint = newEntry, //entrypoint,
-                        //Cmd = runCmds,
-                        Name = containerName,
-                        HostConfig = new HostConfig()
-                        //User = maintainer
-                    }).Result;
-
-                this.ViewBag.Message = "Done!";
-            }
-            catch (Exception e)
-            {
-                Logger.Log(e.Message);
-
-                this.ViewBag.Message = e.Message;
-
-                this.ViewBag.Message = "Error creating container!";
-            }
-
-            return response;
         }
 
         public IActionResult About()
@@ -354,6 +137,8 @@ namespace WebInterface.Controllers
                 return this.View("Index", config);
             }
 
+            GlobalData.Messages.Clear();
+
             var success = await this.RunScriptAsync(config);
 
             if (success)
@@ -361,8 +146,7 @@ namespace WebInterface.Controllers
                 return this.DownloadResult();
             }
 
-            // todo: error
-            return this.View("Index", config);
+            return this.RedirectToAction("Index", config);
         }
 
         [HttpPost]
@@ -555,19 +339,17 @@ namespace WebInterface.Controllers
                 return;
             }
 
-            var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads");
+            var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads/program_license");
 
             if (!Directory.Exists(uploads))
             {
                 Directory.CreateDirectory(uploads);
             }
 
-            const string filename = "gamslice.txt"; //"licence";//config.File.FileName;
+            const string filename = "gamslice.txt";
             var filePath = Path.Combine(uploads, filename);
 
-            config.FileName = "http://webinterface/uploads/model_input_data/" + filename;
-            config.LicencePath = config.FileName;
-            //Path.Combine(Path.GetDirectoryName(filePath), filename);
+            config.LicencePath = "http://webinterface/uploads/program_license/" + filename;
 
             if (System.IO.File.Exists(filePath))
             {

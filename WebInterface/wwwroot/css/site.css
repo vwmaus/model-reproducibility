@@ -29,8 +29,6 @@
     height: 250px;
     overflow: scroll;
     background-color: #cccccc;
-    /* ReSharper disable once UnknownCssVendorExtension */
-    -ms-border-radius: 10px;
     border-radius: 10px;
     padding: 10px;
 }

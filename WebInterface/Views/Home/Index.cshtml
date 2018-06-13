@@ -6,48 +6,7 @@
 @model UserConfiguration
 
 <script type="text/javascript">
-    ////$(document).ready(function () {
-    ////        $("#btnSave").click(function () {
 
-    ////            $.ajax(
-    ////                {
-    ////                    type: "POST", //HTTP POST Method
-    ////                    url: "AdminInsert", // Controller/View
-    ////                    data: { //Passing data
-    ////                        //Reading text box values using Jquery
-    ////                        Line: $("#txtLine").val(),
-    ////                        Supplier: $("#txtSupplier").val()
-    ////                    }
-    ////                }).success(function() {
-    ////                $("#theTable").load("/YourControllerName/TableData");
-    ////            });
-    ////        });
-
-
-    //$(document).ready(
-    //    ///////////////////////////////////////////////////////////////////
-    //    function () {
-    //        var serviceURL = '/Home/Messages';
-
-    //        //function ajaxcall() {
-    //        //    $.ajax(
-    //        //        {
-    //        //            type: "POST",
-    //        //            url: serviceURL,
-    //        //            success: successFunc
-    //        //            //error: errorFunc
-    //        //        });
-    //        //}
-
-    //        alert('hello');
-
-    //        //setInterval(ajaxcall, 500);
-
-    //        //function successFunc(data, status) {
-    //        //    $("#tableDiv").html(data);
-    //        //}
-    //    }
-    //);
 </script>
 
 <div>
@@ -68,18 +27,6 @@
             @Html.ValidationMessageFor(m => m.SelectedProgramVersion)
             @Html.DropDownListFor(m => m.SelectedProgramVersion, Model.ProgramVersions, new { @class = "form-control", @id = "programVersion" })
         </div>
-
-        @*<div class="form-group">
-                @Html.LabelFor(m => m.ProgramArchitecture, "Program Architecture")
-                @Html.ValidationMessageFor(m => m.ProgramArchitecture)
-                @Html.DropDownListFor(m => m.ProgramArchitecture,
-                    new List<SelectListItem>
-                    {
-                        new SelectListItem{ Text="x64 (64 bit)", Value = Architectures.x64_64.ToString() },
-                        new SelectListItem{ Text="x86 (32 bit)", Value = Architectures.x86_32.ToString() }
-                    },
-                    new { @class = "form-control", @id = "programArchitecture" })
-            </div>*@
 
         <div class="form-group">
             @Html.LabelFor(m => m.GitHubUser, "GitHub User ID")
@@ -162,10 +109,6 @@
                 </div>*@
         </div>
 
-        @*<div class="form-group">
-                <input type="submit" value="Build Image" id="btn_buildImage" class="btn btn-default" asp-action="BuildImage" asp-controller="Home" />
-            </div>*@
-
         <div class="form-group">
             <input type="submit" value="Run Script" class="btn btn-success" asp-action="RunScript" asp-controller="Home" />
             <input type="submit" value="Download Result" class="btn btn-warning" asp-action="DownloadResult" asp-controller="Home" />
@@ -176,10 +119,8 @@
     }
 </div>
 
-
-
 <div>
-    <label for="dockerLog">Docker Log:</label>
+    <label>Docker Log:</label>
     <div id="tableDiv">
     </div>
 </div>

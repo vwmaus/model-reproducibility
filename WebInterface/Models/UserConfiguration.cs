@@ -11,8 +11,6 @@ namespace WebInterface.Models
         public IFormFile File { set; get; }
         public IFormFile ModelDataFile { set; get; }
 
-        public string FileName { get; set; }
-
         public List<SelectListItem> GithubRepositories { get; set; }
 
         [Required(ErrorMessage = "The model is required.")]
