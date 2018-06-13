@@ -5,6 +5,51 @@
 
 @model UserConfiguration
 
+<script type="text/javascript">
+    ////$(document).ready(function () {
+    ////        $("#btnSave").click(function () {
+
+    ////            $.ajax(
+    ////                {
+    ////                    type: "POST", //HTTP POST Method
+    ////                    url: "AdminInsert", // Controller/View
+    ////                    data: { //Passing data
+    ////                        //Reading text box values using Jquery
+    ////                        Line: $("#txtLine").val(),
+    ////                        Supplier: $("#txtSupplier").val()
+    ////                    }
+    ////                }).success(function() {
+    ////                $("#theTable").load("/YourControllerName/TableData");
+    ////            });
+    ////        });
+
+
+    //$(document).ready(
+    //    ///////////////////////////////////////////////////////////////////
+    //    function () {
+    //        var serviceURL = '/Home/Messages';
+
+    //        //function ajaxcall() {
+    //        //    $.ajax(
+    //        //        {
+    //        //            type: "POST",
+    //        //            url: serviceURL,
+    //        //            success: successFunc
+    //        //            //error: errorFunc
+    //        //        });
+    //        //}
+
+    //        alert('hello');
+
+    //        //setInterval(ajaxcall, 500);
+
+    //        //function successFunc(data, status) {
+    //        //    $("#tableDiv").html(data);
+    //        //}
+    //    }
+    //);
+</script>
+
 <div>
     <h1>IRT - IIASA Reproducibility Tool</h1>
     <br />
@@ -55,16 +100,16 @@
         </div>
 
         @*<div class="form-group">
-            @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
-            @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
-            @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
-        </div>
+                @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
+                @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
+                @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
+            </div>
 
-        <div class="form-group">
-            @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
-            @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
-            @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
-        </div>*@
+            <div class="form-group">
+                @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
+                @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
+                @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
+            </div>*@
 
         @*<div class="form-group">
                 @Html.LabelFor(m => m.LicencePath, "Licence Path")
@@ -81,30 +126,30 @@
 
         <div class="form-group">
             <label for="uploadModelDataFile">Upload Model Data (.zip)</label>
-            <span><input asp-for="ModelDataFile" class="form-control-file" id="uploadModelDataFile"/></span>
+            <span><input asp-for="ModelDataFile" class="form-control-file" id="uploadModelDataFile" /></span>
             @*<br />
-            <input type="submit" value="Upload Model Input Data" class="btn btn-info" asp-action="UploadModelData" asp-controller="Home" />*@
+                <input type="submit" value="Upload Model Input Data" class="btn btn-info" asp-action="UploadModelData" asp-controller="Home" />*@
         </div>
 
         <div class="form-group">
             <label for="uploadLicenceFile">Upload Licence File</label>
             <span><input asp-for="File" class="form-control-file" id="uploadLicenceFile" /></span>
             @*<br />
-            <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />*@
+                <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />*@
         </div>
 
         @*<div class="form-check">
 
-            <div>
-                @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
-                @Html.LabelFor(m => m.SaveToDatabase, "Save result to IIASA database")
-            </div>
+                <div>
+                    @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
+                    @Html.LabelFor(m => m.SaveToDatabase, "Save result to IIASA database")
+                </div>
 
-            <div>
-                @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
-                @Html.LabelFor(m => m.DownloadResult, "Download Result")
-            </div>
-        </div>*@
+                <div>
+                    @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
+                    @Html.LabelFor(m => m.DownloadResult, "Download Result")
+                </div>
+            </div>*@
 
         <br />
         <div id="downloadSection">
@@ -113,13 +158,13 @@
             </div>
 
             @*<div class="form-group">
-                <a id="btn_downloadGeonodeData" class="btn btn-light">Download Geonode File</a>
-            </div>*@
+                    <a id="btn_downloadGeonodeData" class="btn btn-light">Download Geonode File</a>
+                </div>*@
         </div>
 
         @*<div class="form-group">
-            <input type="submit" value="Build Image" id="btn_buildImage" class="btn btn-default" asp-action="BuildImage" asp-controller="Home" />
-        </div>*@
+                <input type="submit" value="Build Image" id="btn_buildImage" class="btn btn-default" asp-action="BuildImage" asp-controller="Home" />
+            </div>*@
 
         <div class="form-group">
             <input type="submit" value="Run Script" class="btn btn-success" asp-action="RunScript" asp-controller="Home" />
@@ -131,7 +176,10 @@
     }
 </div>
 
-<div class="form-group">
+
+
+<div>
     <label for="dockerLog">Docker Log:</label>
-    <input type="text" class="form-control" id="dockerLog" readonly>
+    <div id="tableDiv">
+    </div>
 </div>

@@ -42,6 +42,8 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
+            SetDefaultConfig(userConfig);
+
             //https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
 
             if (Client == null)
@@ -52,14 +54,14 @@ namespace WebInterface.Controllers
 
                 //var report = new Progress<JSONMessage>(msg =>
                 //{
-                //    Debug.WriteLine($"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}");
+                //    Logger.Log($"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}");
                 //});
 
                 //await Client.System.MonitorEventsAsync(new ContainerEventsParameters(), report, CancellationToken.None);
             }
 
             //var info = await Client.System.GetSystemInfoAsync(CancellationToken.None);
-            //Debug.WriteLine(info);
+            //Logger.Log(info);
 
             //var c = await Client.Containers.ListContainersAsync(new ContainersListParameters(), CancellationToken.None);
 
@@ -69,6 +71,19 @@ namespace WebInterface.Controllers
             //var res = await this.DockerService.DockerClient.Images.CreateImageAsync(icp, new AuthConfig() { });
 
             return this.View(userConfig);
+        }
+
+        public void SetDefaultConfig(UserConfiguration config)
+        {
+            config.GithubRepositories.Add(new SelectListItem {Text = "transport-model", Value = "transport-model"});
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v1.0", Value = "v1.0" });
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v2.0", Value = "v2.0" });
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v3.0", Value = "v3.0" });
+        }
+
+        public ActionResult Messages()
+        {
+            return this.PartialView("Messages", GlobalData.Messages);
         }
 
         public async Task<CreateContainerResponse> CreateDockerModelContainer(UserConfiguration config)
@@ -106,7 +121,9 @@ namespace WebInterface.Controllers
 
             var report = new Progress<JSONMessage>(msg =>
             {
-                Debug.WriteLine($"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}");
+                var message = $"{msg.Status}|{msg.ProgressMessage}|{msg.ErrorMessage}";
+
+                Logger.Log(message);
             });
 
             // Pull Dockerfile Reference image
@@ -116,7 +133,6 @@ namespace WebInterface.Controllers
             }, new AuthConfig(), report
             );
 
-
             //new ImageLoadParameters() {Parent = parent, Tag = tag}, new AuthConfig());
 
             // Get stream output
@@ -125,7 +141,7 @@ namespace WebInterface.Controllers
             //    string line;
             //    while ((line = reader.ReadLine()) != null)
             //    {
-            //        Debug.WriteLine(line);
+            //        Logger.Log(line);
             //    }
             //}
 
@@ -278,7 +294,8 @@ namespace WebInterface.Controllers
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Logger.Log(e.Message);
+
                 this.ViewBag.Message = e.Message;
 
                 this.ViewBag.Message = "Error creating container!";
@@ -423,9 +440,9 @@ namespace WebInterface.Controllers
                 using (var sr = new StreamReader(path))
                 {
                     var content = sr.ReadToEnd();
-                    Debug.WriteLine("\n\n\n\n======== DOCKERFILE START =======================================");
-                    Debug.WriteLine("\n" + content);
-                    Debug.WriteLine("========= DOCKERFILE END ======================================\n\n\n\n\n");
+                    Logger.Log("\n\n\n\n======== DOCKERFILE START =======================================");
+                    Logger.Log("\n" + content);
+                    Logger.Log("========= DOCKERFILE END ======================================\n\n\n\n\n");
                 }
 
                 //hs.DownloadZipDataToFolder("http://geonode_geonode_1/documents/3/download/", @"./OutputZip/data.zip");
@@ -460,7 +477,7 @@ namespace WebInterface.Controllers
                         string line;
                         while ((line = streamReader.ReadLine()) != null)
                         {
-                            Debug.WriteLine(line);
+                            Logger.Log(line);
                         }
                     }
 
@@ -505,11 +522,11 @@ namespace WebInterface.Controllers
 
                 if (res)
                 {
-                    Debug.WriteLine("done");
+                    Logger.Log("done");
                 }
                 else
                 {
-                    Debug.WriteLine("error");
+                    Logger.Log("error");
                 }
 
                 var outputResponse = await Client.Containers.GetArchiveFromContainerAsync(containerResponse.ID,
@@ -525,22 +542,22 @@ namespace WebInterface.Controllers
                     outputResponse.Stream.CopyTo(s);
                 }
 
-                Debug.WriteLine("output finished!");
+                Logger.Log("output finished!");
 
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(
+                Logger.Log(
                     "=================== ERROR ===========================================================================");
-                Debug.WriteLine(ex.Message); //ex.FullMessage());
+                Logger.Log(ex.Message); //ex.FullMessage());
 
                 if (ex.InnerException != null)
                 {
-                    Debug.WriteLine(ex.InnerException.Message);
+                    Logger.Log(ex.InnerException.Message);
                 }
 
-                Debug.WriteLine(
+                Logger.Log(
                     "=====================================================================================================");
 
                 return false;
@@ -559,7 +576,7 @@ namespace WebInterface.Controllers
 
                 try
                 {
-                    //Debug.WriteLine("-------------------- START CONTAINER ---------------------");
+                    //Logger.Log("-------------------- START CONTAINER ---------------------");
                     //var containerStarted =
                     //    await client.Containers.StartContainerAsync(response.ID,
                     //        new HostConfig { });
@@ -580,20 +597,20 @@ namespace WebInterface.Controllers
                     using (var reader = new StreamReader(log))
                     {
                         string line;
-                        Debug.WriteLine("==== LOG ======================");
+                        Logger.Log("==== LOG ======================");
                         while ((line = reader.ReadLine()) != null)
                         {
 
-                            Debug.WriteLine(line);
+                            Logger.Log(line);
                         }
-                        Debug.WriteLine("===============================");
+                        Logger.Log("===============================");
                     }
                     */
 
 
             //if (containerStarted)
             //{
-            //    Debug.WriteLine("Container Started!!!");
+            //    Logger.Log("Container Started!!!");
 
             //    // todo: copy output
             //    // docker cp d07f55ec3f0f:/ output C:/ temp
@@ -647,16 +664,16 @@ namespace WebInterface.Controllers
         }
         catch (Exception ex)
         {
-            Debug.WriteLine(
+            Logger.Log(
                 "=================== ERROR ===========================================================================");
-            Debug.WriteLine(ex.Message); //ex.FullMessage());
+            Logger.Log(ex.Message); //ex.FullMessage());
 
             if (ex.InnerException != null)
             {
-                Debug.WriteLine(ex.InnerException.Message);
+                Logger.Log(ex.InnerException.Message);
             }
 
-            Debug.WriteLine(
+            Logger.Log(
                 "=====================================================================================================");
         }
 
@@ -774,7 +791,7 @@ namespace WebInterface.Controllers
 
                 //process.OutputDataReceived += this.Process_OutputDataReceived;
 
-                Debug.WriteLine(process.StandardOutput.ReadToEnd());
+                Logger.Log(process.StandardOutput.ReadToEnd());
 
                 process.WaitForExit();
             }

@@ -42,14 +42,14 @@ function httpGet(theUrl) {
     xmlHttp.send(null);
     //return xmlHttp;
 
-    xmlHttp.onreadystatechange = function() {
+    xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
             return xmlHttp.responseText;
         }
         return false;
     };
 
-//return xmlHttp.responseText;
+    //return xmlHttp.responseText;
 }
 
 function httpGetAsync(theUrl, callback) {
@@ -236,7 +236,7 @@ function getGeoNodeModels() {
 
     //var res = httpGet(documentsUrl);
     httpGetAsync(documentsUrl,
-        function(responseText) {
+        function (responseText) {
             alert(responseText);
         });
 
@@ -301,8 +301,41 @@ function addDownloadButton() {
 // DOM 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
+var my_time;
+
+function pageScroll() {
+    var objDiv = document.getElementById("tableDiv");
+
+    objDiv.scrollTop = objDiv.scrollTop + 10; // + 1
+
+    //$('p:nth-of-type(1)').html('scrollTop : ' + objDiv.scrollTop);
+    //$('p:nth-of-type(2)').html('scrollHeight : ' + objDiv.scrollHeight);
+    if (objDiv.scrollTop == (objDiv.scrollHeight - 10)) {
+        objDiv.scrollTop = 0;
+    }
+    my_time = setTimeout('pageScroll()', 1);
+}
+
 $(document).ready(function () {
     //$("#btn_runScript").click(runScript);
+
+    var serviceUrl = "/Home/Messages";
+
+    function refreshTable() {
+        $("#tableDiv").load(serviceUrl, function () {
+            setTimeout(refreshTable, 5000);
+        });
+    }
+
+    pageScroll();
+
+    $("#tableDiv").mouseover(function () {
+        clearTimeout(my_time);
+    }).mouseout(function () {
+        pageScroll();
+    });
+
+    refreshTable();
 
     $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
 

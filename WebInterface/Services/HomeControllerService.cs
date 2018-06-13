@@ -188,11 +188,11 @@ namespace WebInterface.Services
         {
             if (config == null)
             {
-                Debug.WriteLine("Config file is null");
+                Logger.Log("Config file is null");
                 return string.Empty;
             }
 
-            Debug.WriteLine("Create Gams Dockerfile...");
+            Logger.Log("Create Gams Dockerfile...");
 
             const string gamsVersionPlaceholder = "#GAMS_VERSION#";
             const string githubUserPlaceholder = "#GITHUB_USER#";
@@ -209,7 +209,7 @@ namespace WebInterface.Services
 
             var dockerTemplate = TemplatePath + DockerFileName;
 
-            Debug.WriteLine("Dockerfile-Path: " + Path.GetFullPath(dockerTemplate));
+            Logger.Log("Dockerfile-Path: " + Path.GetFullPath(dockerTemplate));
 
             using (var reader = new StreamReader(dockerTemplate))
             {
@@ -227,10 +227,10 @@ namespace WebInterface.Services
 
             if (string.IsNullOrEmpty(config.LicencePath))
             {
-                dockerfileContent = dockerfileContent.Replace(@"COPY ${LICENSE_PATH} /opt/gams/gams/gamslice.txt",
+                dockerfileContent = dockerfileContent.Replace(@"COPY ${LICENSE_PATH} /opt/gams/gamslice.txt",
                     "# No licence file found or entered!");
 
-                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${LICENSE_PATH} --create-dirs -o /opt/gams/gams/gamslice.txt",
+                dockerfileContent = dockerfileContent.Replace(@"RUN curl -SL ${LICENSE_PATH} --create-dirs -o /opt/gams/gamslice.txt",
                     "# No licence file found or entered!");
             }
             else
@@ -291,7 +291,7 @@ namespace WebInterface.Services
         /*
         public void CreateModelDockerfile(UserConfiguration userConfiguration)
         {
-            Debug.WriteLine("Create Model Dockerfile");
+            Logger.Log("Create Model Dockerfile");
 
             const string modelPlaceholder = "#MODEL#";
             const string modelversionPlaceholder = "#MODEL_VERSION#";
@@ -429,7 +429,7 @@ namespace WebInterface.Services
             }
             catch (Exception ex)
             {
-                Debug.Write(ex);
+                Logger.Log(ex.Message);
             }
 
             return default(T);

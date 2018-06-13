@@ -8,6 +8,9 @@ using ICSharpCode.SharpZipLib.Tar;
 
 namespace WebInterface.Classes
 {
+    using System.Diagnostics;
+    using WebInterface.Models;
+
     public static class Extensions
     {
         public static bool IsNull(this object o)
