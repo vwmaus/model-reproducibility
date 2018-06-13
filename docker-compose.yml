@@ -1,4 +1,7 @@
-version: '3'
+# set custom network name
+# https://forums.docker.com/t/set-default-network-name-for-compose/36779
+
+version: '3.6'
 
 services:
   webinterface:
@@ -7,6 +10,9 @@ services:
     build:
       context: ./WebInterface
       dockerfile: Dockerfile
+#    environment:
+#      - DOTNET_USE_POLLING_FILE_WATCHER=1
+
 #    networks:
 #      - iiasa
 #    external_links:
@@ -15,6 +21,11 @@ services:
       - "5000:80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - webinterface_default
+
+networks:
+  webinterface_default:
 
 #networks:
 #  default:
