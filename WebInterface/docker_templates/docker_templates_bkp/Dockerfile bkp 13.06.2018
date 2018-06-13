@@ -38,6 +38,9 @@ RUN mkdir -p /output
 ### Checkout model version 
 RUN git checkout ${GITHUB_RELEASE}
 
+### Install unzip package
+#RUN apt-get install unzip
+
 ### Remove data folder
 RUN rm -rf /workspace/data
 

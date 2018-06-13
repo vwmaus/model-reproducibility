@@ -42,7 +42,10 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
-            SetDefaultConfig(userConfig);
+            if (userConfig.GithubRepositories.Count == 0)
+            {
+                SetDefaultConfig(userConfig);
+            }
 
             //https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
 
@@ -448,7 +451,8 @@ namespace WebInterface.Controllers
                 //hs.DownloadZipDataToFolder("http://geonode_geonode_1/documents/3/download/", @"./OutputZip/data.zip");
 
                 var networks = await Client.Networks.ListNetworksAsync();
-                var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
+                //var geonodeNetwork = networks.First(x => x.Name.Contains("geonode"));
+                var network = networks.First(x => x.Name.Contains("default"));
 
                 var imageName = "gams/iiasa";
                 var tag = "latest";
@@ -460,7 +464,7 @@ namespace WebInterface.Controllers
                     Remove = true,
                     ForceRemove = true,
                     Tags = new List<string> { imageName + ":" + tag }, //{DateTime.Now.ToShortDateString()}" },
-                    NetworkMode = geonodeNetwork.Name,
+                    NetworkMode = network.Name,//geonodeNetwork.Name,
                     NoCache = true
                 };
 

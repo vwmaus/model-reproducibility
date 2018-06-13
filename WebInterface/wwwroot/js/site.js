@@ -310,10 +310,10 @@ function pageScroll() {
 
     //$('p:nth-of-type(1)').html('scrollTop : ' + objDiv.scrollTop);
     //$('p:nth-of-type(2)').html('scrollHeight : ' + objDiv.scrollHeight);
-    if (objDiv.scrollTop == (objDiv.scrollHeight - 10)) {
+    if (objDiv.scrollTop === (objDiv.scrollHeight)) {
         objDiv.scrollTop = 0;
     }
-    my_time = setTimeout('pageScroll()', 1);
+    my_time = setTimeout("pageScroll()", 1);
 }
 
 $(document).ready(function () {
@@ -323,7 +323,7 @@ $(document).ready(function () {
 
     function refreshTable() {
         $("#tableDiv").load(serviceUrl, function () {
-            setTimeout(refreshTable, 5000);
+            setTimeout(refreshTable, 500);
         });
     }
 
