@@ -5,37 +5,6 @@
 // ajax call controller action:
 // https://stackoverflow.com/questions/12559515/jquery-ajax-call-to-controller
 
-//function runScript() {
-//    window.alert("runScript");
-//    addDownloadButton();
-//    return false;
-//}
-
-//function downloadDockerfiles() {
-//    createDockerfiles();
-//    return false;
-//}
-
-//function createDockerfiles() {
-//    window.alert("createDockerfiles");
-//}
-
-//function createGamsDockerfile() {
-//    var lic = $("#licencePath").val();
-
-//    $.ajax({
-//        url: $("#btn_downloadDockerfile").attr("href"),
-//        type: "POST",
-//        data: {
-//            licencePath: lic
-//        }
-//    }).done(function () {
-//        alert("Dockerfile created");
-//    });
-
-//    return false;
-//}
-
 function httpGet(theUrl) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
@@ -239,52 +208,6 @@ function getGeoNodeModels() {
         function (responseText) {
             alert(responseText);
         });
-
-    //var xmlHttp = new XMLHttpRequest();
-    //xmlHttp.open("GET", documentsUrl, false); // false for synchronous request
-    ////xmlHttp.send(null);
-    ////return xmlHttp;
-
-    //xmlHttp.onreadystatechange = function () {
-    //    //if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-    //        //alert(xmlHttp.responseText);
-    //    //}
-    //    alert("hallo");
-    //}
-
-    //xmlHttp.ontimeout = alert("timeout");
-
-    //alert(res);
-
-    //var obj = JSON.parse(res);
-    //alert(obj);
-
-    //var tags = new Array();
-
-    //alert(tags);
-
-    //if (Object.prototype.toString.call(obj) === "[object Array]") {
-    //    obj.forEach(function (entry) {
-    //        var tag = entry.abstract;
-    //        console.log(tag);
-    //        tags.push(tag);
-    //    });
-    //}
-
-    //var sel = $("#geonodeModelData");
-
-    //$(sel)
-    //    .find("option")
-    //    .remove()
-    //    .end();
-
-    //$.each(tags, function (val, text) {
-    //    sel.append(
-    //        $("<option></option>").val(text).html(text)
-    //    );
-    //});
-
-    //return false;
 }
 
 function getGeoNodeModelTags() {
@@ -301,21 +224,6 @@ function addDownloadButton() {
 // DOM 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-var my_time;
-
-function pageScroll() {
-    var objDiv = document.getElementById("tableDiv");
-
-    objDiv.scrollTop = objDiv.scrollTop + 10; // + 1
-
-    //$('p:nth-of-type(1)').html('scrollTop : ' + objDiv.scrollTop);
-    //$('p:nth-of-type(2)').html('scrollHeight : ' + objDiv.scrollHeight);
-    if (objDiv.scrollTop === (objDiv.scrollHeight)) {
-        objDiv.scrollTop = 0;
-    }
-    my_time = setTimeout("pageScroll()", 1);
-}
-
 $(document).ready(function () {
     //$("#btn_runScript").click(runScript);
 
@@ -327,13 +235,19 @@ $(document).ready(function () {
         });
     }
 
-    pageScroll();
+    var $el = $("#tableDiv");
+    function anim() {
+        var sb = $el.prop("scrollHeight") - $el.innerHeight();
+        $el.animate({
+            scrollTop: sb
+        }, 1000, anim);
+    }
+    function stop() {
+        $el.stop();
+    }
 
-    $("#tableDiv").mouseover(function () {
-        clearTimeout(my_time);
-    }).mouseout(function () {
-        pageScroll();
-    });
+    anim();
+    $el.hover(stop, anim);
 
     refreshTable();
 
@@ -374,7 +288,5 @@ $(document).ready(function () {
             $("#uploadFile").text(input[0].name);
         }
     });
-
-    //ReloadFormData();
 });
 /////////////////////////////////////////////////////////////////////////////////////////////

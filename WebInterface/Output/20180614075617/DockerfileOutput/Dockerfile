@@ -1,23 +1,23 @@
 ### Get base image
-FROM iiasa/gams:#GAMS_VERSION#
+FROM iiasa/gams:latest
 
 ### Set maintainer
 MAINTAINER "Victor Maus" maus@iiasa.ac.at
 
 ### Program license path
-ENV LICENSE_PATH=#LICENSE_PATH#
+ENV LICENSE_PATH=http://webinterface/uploads/program_license/gamslice.txt
 
 ### Get GitHub repository from web interface
-ENV GITHUB_USER=#GITHUB_USER#
+ENV GITHUB_USER=ptrkrnstnr
 
 ### Get GitHub repository from web interface 
-ENV GITHUB_REPO=#MODEL#
+ENV GITHUB_REPO=transport-model
 
 ### Get model version from web interface 
-ENV GITHUB_RELEASE=#MODEL_VERSION#
+ENV GITHUB_RELEASE=v3.0
 
 ### Input data file path or link of external input data
-ENV INPUT_DATA_FILE_PATH=#INPUT_DATA_FILE_PATH#
+ENV INPUT_DATA_FILE_PATH=http://webinterface/uploads/model_input_data/modelInputData.zip
 
 ### Set workspace 
 WORKDIR /workspace

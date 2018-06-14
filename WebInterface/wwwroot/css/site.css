@@ -23,30 +23,19 @@
 #tableDiv {
     /*position: relative;*/
     overflow-y: scroll;
-    font-size: 12px;
+    font-size: 13px;
     color: black;
-    width: 1150px;
+    width: 100%;
     height: 250px;
     overflow: scroll;
-    background-color: #cccccc;
+    background-color: lightgrey;
     border-radius: 10px;
     padding: 10px;
 }
 
 #messagesTable {
-    width: 100%;
+    width: 80%;
     border-collapse: collapse;
-}
-
-#table_scroll thead th {
-    padding: 10px;
-    background-color: #ea922c;
-    color: #fff;
-}
-#table_scroll tbody td {
-    padding: 10px;
-    background-color: #ed3a86;
-    color: #fff;
 }
 
 /* QR code generator */
