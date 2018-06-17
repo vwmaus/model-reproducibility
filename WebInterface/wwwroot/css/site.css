@@ -1,6 +1,5 @@
-﻿body {
+﻿.main {
     padding-top: 50px;
-    padding-bottom: 20px;
 }
 
 /* Wrapping element */
@@ -19,6 +18,24 @@
 /* Make .svg files in the carousel display properly in older browsers */
 .carousel-inner .item img[src$=".svg"] {
     width: 100%;
+}
+
+#tableDiv {
+    /*position: relative;*/
+    overflow-y: scroll;
+    font-size: 13px;
+    color: black;
+    width: 100%;
+    height: 250px;
+    overflow: scroll;
+    background-color: lightgrey;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#messagesTable {
+    width: 80%;
+    border-collapse: collapse;
 }
 
 /* QR code generator */

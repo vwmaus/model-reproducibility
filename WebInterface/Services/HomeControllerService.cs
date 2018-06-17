@@ -1,163 +1,278 @@
-﻿namespace WebInterface.Services
+﻿using WebInterface.Classes;
+
+namespace WebInterface.Services
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.IO.Compression;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Mvc;
-    using WebInterface.Classes;
     using WebInterface.Models;
     using System.Net;
+    using ICSharpCode.SharpZipLib.GZip;
+    using ICSharpCode.SharpZipLib.Tar;
     using Newtonsoft.Json;
 
     public class HomeControllerService : ControllerBase
     {
+        private static string outputFolderName;
+
+        private static string dockerFileName;
+
+        private static string dockerFileZipName;
+
+        private static string outputFilePath;
+
+        private static string dockerFilePath;
+
+        private static string resultFilePath;
+
+        private static string dockerFileZipPath;
+
         public new string User => "User" + new Random().Next();
 
         public const string TemplatePath = "./docker_templates/";
+
+        public static string OutputFilePath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(outputFilePath))
+                {
+                    return outputFilePath;
+                }
+
+                outputFilePath = $@"./Output/{OutputFolderName}/";
+
+                if (!Directory.Exists(outputFilePath))
+                {
+                    Directory.CreateDirectory(outputFilePath);
+                }
+
+                return outputFilePath;
+            }
+        }
+
+        public static string DockerFilePath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(dockerFilePath))
+                {
+                    return dockerFilePath;
+                }
+
+                dockerFilePath = $@"{OutputFilePath}/DockerfileOutput/";
+
+                if (!Directory.Exists(dockerFilePath))
+                {
+                    Directory.CreateDirectory(dockerFilePath);
+                }
+
+                return dockerFilePath;
+            }
+        }
+
+        public static string ResultFilePath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(resultFilePath))
+                {
+                    return resultFilePath;
+                }
+
+                resultFilePath = $@"{OutputFilePath}/output/";
+
+                if (!Directory.Exists(resultFilePath))
+                {
+                    Directory.CreateDirectory(resultFilePath);
+                }
+
+                return resultFilePath;
+            }
+        }
+
+        public static string OutputFolderName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(outputFolderName))
+                {
+                    outputFolderName = DateTime.Now.ToString("yyyyMMddHHmmss");
+                }
+
+                return outputFolderName;
+            }
+        }
+
+        public static string DockerFileName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(dockerFileName))
+                {
+                    dockerFileName = "Dockerfile"; // "Dockerfile-model"
+                }
+
+                return dockerFileName;
+            }
+            set => dockerFileName = value;
+        }
+
+        public static string DockerFileZipPath
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(dockerFileZipPath))
+                {
+                    return dockerFileZipPath;
+                }
+
+                dockerFileZipPath = $@"./OutputZip/{OutputFolderName}";
+
+                if (!Directory.Exists(dockerFileZipPath))
+                {
+                    Directory.CreateDirectory(dockerFileZipPath);
+                }
+
+                return dockerFileZipPath;
+            }
+        }
+
+        public static string DockerFileZipName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(dockerFileZipName))
+                {
+                    dockerFileZipName = "dockerfiles.zip";
+                }
+
+                return dockerFileZipName;
+            }
+            set => dockerFileZipName = value;
+        }
 
         public string GamsDockerfilePath { get; set; }
 
         public string ModelDockerfilePath { get; set; }
 
-        public void CreateGamsDockerfile(UserConfiguration config, string outputFolder = "")
+        public void DownloadZipDataToFolder(string url, string outputFile)
+        {
+            byte[] data;
+            using (var client = new WebClient())
+            {
+                data = client.DownloadData(url);
+            }
+
+            System.IO.File.WriteAllBytes(outputFile, data);
+        }
+
+        public void CreateTarGz(string tgzFilename, string fileName)
+        {
+            using (var outStream = System.IO.File.Create(tgzFilename))
+            using (var gzipStream = new GZipOutputStream(outStream))
+            using (var tarArchive = TarArchive.CreateOutputTarArchive(gzipStream))
+            {
+                var tarEntry = TarEntry.CreateEntryFromFile(fileName);
+                tarEntry.Name = Path.GetFileName(fileName);
+
+                tarArchive.WriteEntry(tarEntry, true);
+            }
+        }
+
+        public string CreateGamsDockerfile(UserConfiguration config)
         {
             if (config == null)
             {
-                Debug.WriteLine("Config file is null");
-                return;
+                Logger.Log("Config file is null");
+                return string.Empty;
             }
 
-            Debug.WriteLine("Create Gams Dockerfile...");
-
+            Logger.Log("Creating Gams Dockerfile...");
 
             const string gamsVersionPlaceholder = "#GAMS_VERSION#";
             const string githubUserPlaceholder = "#GITHUB_USER#";
             const string modelPlaceholder = "#MODEL#";
             const string modelVersionPlaceholder = "#MODEL_VERSION#";
-            const string geonodeDataVersionPlaceholder = "#DATA_VERSION#";
+            const string inputDataFilePathPlaceholder = "#INPUT_DATA_FILE_PATH#";
+            const string licencePlaceholder = "#LICENSE_PATH#";
 
-            const string dockerFileName = "Dockerfile-model";
+            var dockerTemplate = TemplatePath + DockerFileName;
 
-            const string licencePlaceholder = "#GAMS_LICENSE#";
+            Logger.Log("Dockerfile-Path: " + Path.GetFullPath(dockerTemplate));
 
-            string dockerfileContent;
-
-            const string dockerTemplate = TemplatePath + dockerFileName;
-
+            var dockerfileContent = new List<string>();
             using (var reader = new StreamReader(dockerTemplate))
             {
-                dockerfileContent = reader.ReadToEnd();
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                        dockerfileContent.Add(line);
+                }
             }
 
-            dockerfileContent = dockerfileContent
-                .Replace(gamsVersionPlaceholder, config.SelectedProgramVersion)
-                .Replace(githubUserPlaceholder, config.GitHubUser)
-                .Replace(modelPlaceholder, config.SelectedGithubRepository)
-                .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion)
-                .Replace(geonodeDataVersionPlaceholder, config.SelectedGeoNodeDocument);
+            dockerfileContent = dockerfileContent.Select(s => s
+                    .Replace(gamsVersionPlaceholder, config.SelectedProgramVersion)
+                    .Replace(githubUserPlaceholder, config.GitHubUser)
+                    .Replace(modelPlaceholder, config.SelectedGithubRepository)
+                    .Replace(modelVersionPlaceholder, config.SelectedGithubRepositoryVersion)
+                    .Replace(inputDataFilePathPlaceholder, config.ModelInputDataFile)
+                    .Replace(licencePlaceholder, config.LicencePath)).ToList();
 
-            //if (string.IsNullOrEmpty(licencePath))
-            //{
-            //    dockerfileContent = dockerfileContent.Replace(@"COPY ${GAMS_LICENSE} /opt/gams/gamslice.txt", "# No licence file found or entered!");
-            //}
-            //else
-            //{
-            //    licencePath = licencePath.Replace(@"\", "/");
-
-            //    dockerfileContent = dockerfileContent.Replace(licencePlaceholder, licencePath);
-            //}
-
-            //dockerfileContent = dockerfileContent
-            //    .Replace(bitArchitecturePlaceholder, architecture)
-            //    .Replace(gamsVersionPlaceholder, version);
-
-            if (string.IsNullOrEmpty(outputFolder))
+            string altMsg;
+            if (string.IsNullOrEmpty(config.LicencePath))
             {
-                outputFolder = @"./Output/";
-            }
+                // No license provided
+                altMsg = "# No licence file found or entered!";
 
-            if (!Directory.Exists(outputFolder))
+                dockerfileContent = dockerfileContent.Select(s => s
+                    .Replace(@"COPY ${LICENSE_PATH} /opt/gams/gamslice.txt", altMsg)
+                    .Replace(@"RUN curl -SL ${LICENSE_PATH} --create-dirs -o /opt/gams/gamslice.txt", altMsg)
+                    .Replace(dockerfileContent.FirstOrDefault(x => x.StartsWith("CMD")), altMsg)
+                ).ToList();
+            }
+            else
             {
-                Directory.CreateDirectory(outputFolder);
+                config.LicencePath = config.LicencePath.Replace(@"\", "/");
             }
 
-            var outputfile = Path.Combine(outputFolder, dockerFileName);
+            if (string.IsNullOrEmpty(config.ModelInputDataFile))
+            {
+                // No input data provided
+                altMsg = "# No model input data file uploaded";
+
+                dockerfileContent = dockerfileContent.Select(s => s
+                    .Replace(@"COPY ${INPUT_DATA_FILE_PATH} /workspace/data.zip", altMsg)
+                    .Replace(@"RUN curl -SL ${INPUT_DATA_FILE_PATH} --create-dirs -o /workspace/data.zip", altMsg)
+                    .Replace(@"RUN unzip -o /workspace/data.zip -d /workspace/data", altMsg))
+                    .ToList();
+            }
+
+            var outputfile = Path.Combine(DockerFilePath, DockerFileName);
+
             System.IO.File.CreateText(outputfile);
-
-            System.IO.File.WriteAllText(outputfile, dockerfileContent);
+            System.IO.File.WriteAllLines(outputfile, dockerfileContent);
 
             this.GamsDockerfilePath = outputfile;
-        }
 
-        public void CreateModelDockerfile(UserConfiguration userConfiguration, string outputFolder = "", string templateFileName = "Dockerfile-model")
-        {
-            Debug.WriteLine("Create Model Dockerfile");
-
-            const string modelPlaceholder = "#MODEL#";
-            const string modelversionPlaceholder = "#MODEL_VERSION#";
-
-            string dockerfileContent;
-
-            var dockerTemplate = TemplatePath + templateFileName;
-
-            using (var reader = new StreamReader(dockerTemplate))
-            {
-                dockerfileContent = reader.ReadToEnd();
-            }
-
-            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
-            {
-                throw new Exception("Version must not be null or empty!");
-            }
-
-            if (userConfiguration.SelectedGithubRepositoryVersion.IsNullOrEmpty())
-            {
-                throw new Exception("Model must not be null or empty!");
-            }
-
-            dockerfileContent = dockerfileContent
-                .Replace(modelversionPlaceholder, userConfiguration.SelectedGithubRepositoryVersion)
-                .Replace(modelPlaceholder, userConfiguration.SelectedGithubRepository);
-
-            if (string.IsNullOrEmpty(outputFolder))
-            {
-                outputFolder = @"./Output/";
-            }
-
-            if (!Directory.Exists(outputFolder))
-            {
-                Directory.CreateDirectory(outputFolder);
-            }
-
-            var outputfile = Path.Combine(outputFolder, templateFileName);
-            System.IO.File.CreateText(outputfile);
-
-            System.IO.File.WriteAllText(outputfile, dockerfileContent);
-
-            this.GamsDockerfilePath = outputfile;
+            return this.GamsDockerfilePath;
         }
 
         public string CreateDockerZipFile()
         {
-            var outputFolder = $@"./OutputZip/";
-            const string filename = "dockerfiles.zip";
-            var outputfile = Path.Combine(outputFolder, filename);
-            const string inputPath = "./Output/";
-
-            if (!Directory.Exists(outputFolder))
-            {
-                Directory.CreateDirectory(outputFolder);
-            }
+            var outputfile = Path.Combine(DockerFileZipPath, DockerFileZipName);
 
             if (System.IO.File.Exists(outputfile))
             {
                 System.IO.File.Delete(outputfile);
             }
 
-            ZipFile.CreateFromDirectory(inputPath, outputfile);
+            ZipFile.CreateFromDirectory(OutputFilePath, outputfile);
 
             return outputfile;
         }
@@ -168,7 +283,7 @@
             //https://stackoverflow.com/questions/35237863/download-file-using-mvc-core
 
             byte[] fileBytes = System.IO.File.ReadAllBytes(filepath);
-            return File(fileBytes, "application/x-msdownload", downloadFilename);
+            return this.File(fileBytes, "application/x-msdownload", downloadFilename);
         }
 
         public async Task<GeoNodeDocument> GetGeonodeData()
@@ -248,7 +363,7 @@
             }
             catch (Exception ex)
             {
-                Debug.Write(ex);
+                Logger.Log(ex.Message);
             }
 
             return default(T);

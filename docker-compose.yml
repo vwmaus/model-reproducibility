@@ -1,32 +1,35 @@
-version: '3'
+# set custom network name
+# https://forums.docker.com/t/set-default-network-name-for-compose/36779
+
+version: '3.6'
 
 services:
-  
-  webinterface_sdk:
-    image: webinterface_sdk
-    container_name: webinterface_sdk
+  webinterface:
+    image: webinterface
+    container_name: webinterface
     build:
       context: ./WebInterface
       dockerfile: Dockerfile
-    volumes:
-      - webinterface_data:/app
+#    environment:
+#      - DOTNET_USE_POLLING_FILE_WATCHER=1
 
-  webinterface:
-    image: microsoft/aspnetcore:2.0
-    volumes:
-      - webinterface_data:/app
-    working_dir: /app
-    entrypoint: /bin/bash -c "dotnet WebInterface.dll"
-    external_links:
-      - geonode_geonode_1
+#    networks:
+#      - iiasa
+#    external_links:
+#      - geonode_geonode_1
     ports:
       - "5000:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - webinterface_default
 
 networks:
-  default:
-    external: 
-      name: geonode_default
+  webinterface_default:
 
-volumes:
-  webinterface_data:
-
+#networks:
+#  default:
+#    name: "iiasa_default"
+#  default:
+#    external: 
+#      name: geonode_default

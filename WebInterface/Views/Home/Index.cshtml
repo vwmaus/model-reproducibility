@@ -5,6 +5,10 @@
 
 @model UserConfiguration
 
+<script type="text/javascript">
+
+</script>
+
 <div>
     <h1>IRT - IIASA Reproducibility Tool</h1>
     <br />
@@ -24,22 +28,10 @@
             @Html.DropDownListFor(m => m.SelectedProgramVersion, Model.ProgramVersions, new { @class = "form-control", @id = "programVersion" })
         </div>
 
-        @*<div class="form-group">
-                @Html.LabelFor(m => m.ProgramArchitecture, "Program Architecture")
-                @Html.ValidationMessageFor(m => m.ProgramArchitecture)
-                @Html.DropDownListFor(m => m.ProgramArchitecture,
-                    new List<SelectListItem>
-                    {
-                        new SelectListItem{ Text="x64 (64 bit)", Value = Architectures.x64_64.ToString() },
-                        new SelectListItem{ Text="x86 (32 bit)", Value = Architectures.x86_32.ToString() }
-                    },
-                    new { @class = "form-control", @id = "programArchitecture" })
-            </div>*@
-
         <div class="form-group">
             @Html.LabelFor(m => m.GitHubUser, "GitHub User ID")
             @Html.ValidationMessageFor(m => m.GitHubUser)
-            @Html.TextBoxFor(m => m.GitHubUser, new { @class = "form-control", @id = "githubUser", @Value = "vwmaus", @type = "text" })
+            @Html.TextBoxFor(m => m.GitHubUser, new { @class = "form-control", @id = "githubUser", @type = "text" })
         </div>
 
         <div class="form-group">
@@ -54,17 +46,17 @@
             @Html.DropDownListFor(m => m.SelectedGithubRepositoryVersion, Model.GithubRepositoryVersions, new { @class = "form-control", @id = "modelversion" })
         </div>
 
-        <div class="form-group">
-            @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
-            @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
-            @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
-        </div>
+        @*<div class="form-group">
+                @Html.LabelFor(m => m.SelectedGeoNodeDocument, "Geonode Model Data")
+                @Html.ValidationMessageFor(m => m.SelectedGeoNodeDocument)
+                @Html.DropDownListFor(m => m.SelectedGeoNodeDocument, Model.GeoNodeDocuments, new { @class = "form-control", @id = "geonodeModelData" })
+            </div>
 
-        <div class="form-group">
-            @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
-            @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
-            @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
-        </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.SelectedGeonodeModelTag, "Geonode Model Keywords / Version")
+                @Html.ValidationMessageFor(m => m.SelectedGeonodeModelTag)
+                @Html.DropDownListFor(m => m.SelectedGeonodeModelTag, Model.GeonodeModelTags, new { @class = "form-control", @id = "genodelModelTag" })
+            </div>*@
 
         @*<div class="form-group">
                 @Html.LabelFor(m => m.LicencePath, "Licence Path")
@@ -74,45 +66,61 @@
             </div>*@
 
         <div class="form-group">
-            <label for="uploadLicenceFile">Upload licence file</label>
+            @Html.LabelFor(m => m.ModelInputDataFile, "Insert Model Input Data Source (URL) or Model Data (below)")
+            @Html.ValidationMessageFor(m => m.ModelInputDataFile)
+            @Html.TextBoxFor(m => m.ModelInputDataFile, new { @class = "form-control", @id = "modelInputData", @type = "url" })
+        </div>
+
+        <div class="form-group">
+            <label for="uploadModelDataFile">Upload Model Data (.zip)</label>
+            <input asp-for="ModelDataFile" class="form-control-file" id="uploadModelDataFile" />
+            @*<br />
+                <input type="submit" value="Upload Model Input Data" class="btn btn-info" asp-action="UploadModelData" asp-controller="Home" />*@
+        </div>
+
+        <div class="form-group">
+            <label for="uploadLicenceFile">Upload Licence File</label>
             <input asp-for="File" class="form-control-file" id="uploadLicenceFile" />
-            <br />
-            <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />
+            @*<br />
+                <input type="submit" value="Upload Licence" class="btn btn-info" asp-action="UploadLicence" asp-controller="Home" />*@
         </div>
 
-        <div class="form-check">
+        @*<div class="form-check">
 
-            <div>
-                @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
-                @Html.LabelFor(m => m.SaveToDatabase, "Save result to IIASA database")
-            </div>
+                <div>
+                    @Html.CheckBoxFor(m => m.SaveToDatabase, new { @class = "form-check-input", @type = "checkbox" })
+                    @Html.LabelFor(m => m.SaveToDatabase, "Save result to IIASA database")
+                </div>
 
-            <div>
-                @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
-                @Html.LabelFor(m => m.DownloadResult, "Download Result")
-            </div>
-        </div>
+                <div>
+                    @Html.CheckBoxFor(m => m.DownloadResult, new { @class = "form-check-input", @type = "checkbox" })
+                    @Html.LabelFor(m => m.DownloadResult, "Download Result")
+                </div>
+            </div>*@
 
         <br />
         <div id="downloadSection">
             <div class="form-group">
-                <input type="submit" value="Download Dockerfiles" class="btn btn-default" asp-action="DownloadDockerfiles" asp-controller="Home" />
+                <input type="submit" value="Download Dockerfiles" class="btn btn-light" asp-action="DownloadDockerfiles" asp-controller="Home" />
             </div>
 
-            <div class="form-group">
-                <a id="btn_downloadGeonodeData" class="btn btn-default">Download Geonode File</a>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <input type="submit" value="Build Image" id="btn_buildImage" class="btn btn-default" asp-action="BuildImage" asp-controller="Home" />
+            @*<div class="form-group">
+                    <a id="btn_downloadGeonodeData" class="btn btn-light">Download Geonode File</a>
+                </div>*@
         </div>
 
         <div class="form-group">
             <input type="submit" value="Run Script" class="btn btn-success" asp-action="RunScript" asp-controller="Home" />
+            <input type="submit" value="Download Result" class="btn btn-warning" asp-action="DownloadResult" asp-controller="Home" />
+            <div>@ViewBag.Message</div>
         </div>
 
         Html.EndForm();
     }
+</div>
 
+<div>
+    <label>Docker Log:</label>
+    <div id="tableDiv">
+    </div>
 </div>

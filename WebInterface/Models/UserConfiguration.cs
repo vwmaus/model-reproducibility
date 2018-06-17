@@ -9,8 +9,7 @@ namespace WebInterface.Models
     public class UserConfiguration
     {
         public IFormFile File { set; get; }
-
-        public string FileName { get; set; }
+        public IFormFile ModelDataFile { set; get; }
 
         public List<SelectListItem> GithubRepositories { get; set; }
 
@@ -19,8 +18,8 @@ namespace WebInterface.Models
 
         public List<SelectListItem> GeoNodeDocuments { get; set; }
 
-        [Required(ErrorMessage = "The geonode model data is required.")]
-        public string SelectedGeoNodeDocument { get; set; }
+        //[Required(ErrorMessage = "The geonode model data is required.")]
+        //public string SelectedGeoNodeDocument { get; set; }
 
         public List<SelectListItem> GithubRepositoryVersions { get; set; }
 
@@ -37,7 +36,7 @@ namespace WebInterface.Models
         public List<SelectListItem> GeonodeModelTags { get; set; }
 
         //[Required(ErrorMessage = "The geonode model tag is required.")]
-        public string SelectedGeonodeModelTag { get; set; }
+        //public string SelectedGeonodeModelTag { get; set; }
 
         public List<SelectListItem> Programs { get; set; }
 
@@ -59,7 +58,7 @@ namespace WebInterface.Models
 
         public string GitHubUser
         {
-            get => string.IsNullOrEmpty(this.githubUser) ? "vwmaus" : this.githubUser;
+            get => string.IsNullOrEmpty(this.githubUser) ? "ptrkrnstnr" : this.githubUser; // vwmaus
             set => this.githubUser = value;
         }
 
@@ -74,6 +73,8 @@ namespace WebInterface.Models
             get => string.IsNullOrEmpty(this.dockerhubProgramRepository) ? "gams" : this.dockerhubProgramRepository;
             set => this.dockerhubProgramRepository = value;
         }
+
+        public string ModelInputDataFile { get; set; }
 
         public bool SaveToDatabase { get; set; }
 
@@ -91,9 +92,10 @@ namespace WebInterface.Models
             this.Programs = new List<SelectListItem>();
             this.GeonodeModelTags = new List<SelectListItem>();
 
+            this.ModelInputDataFile = string.Empty;
             this.LicencePath = string.Empty;
             this.SelectedProgramVersion = string.Empty;
-            this.SelectedGeoNodeDocument = string.Empty;
+            //this.SelectedGeoNodeDocument = string.Empty;
             this.SelectedGithubRepository = string.Empty;
             this.SelectedGithubRepositoryVersion = string.Empty;
             this.SelectedProgram = string.Empty;

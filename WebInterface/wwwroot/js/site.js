@@ -5,51 +5,20 @@
 // ajax call controller action:
 // https://stackoverflow.com/questions/12559515/jquery-ajax-call-to-controller
 
-//function runScript() {
-//    window.alert("runScript");
-//    addDownloadButton();
-//    return false;
-//}
-
-//function downloadDockerfiles() {
-//    createDockerfiles();
-//    return false;
-//}
-
-//function createDockerfiles() {
-//    window.alert("createDockerfiles");
-//}
-
-//function createGamsDockerfile() {
-//    var lic = $("#licencePath").val();
-
-//    $.ajax({
-//        url: $("#btn_downloadDockerfile").attr("href"),
-//        type: "POST",
-//        data: {
-//            licencePath: lic
-//        }
-//    }).done(function () {
-//        alert("Dockerfile created");
-//    });
-
-//    return false;
-//}
-
 function httpGet(theUrl) {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open("GET", theUrl, false); // false for synchronous request
     xmlHttp.send(null);
     //return xmlHttp;
 
-    xmlHttp.onreadystatechange = function() {
+    xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
             return xmlHttp.responseText;
         }
         return false;
     };
 
-//return xmlHttp.responseText;
+    //return xmlHttp.responseText;
 }
 
 function httpGetAsync(theUrl, callback) {
@@ -113,7 +82,7 @@ function getGithubVersions(owner, repo) {
 
     res = httpGet(url2);
     obj = JSON.parse(res);
-    branches = new Array();
+    var branches = new Array();
 
     if (Object.prototype.toString.call(obj) === "[object Array]") {
         obj.forEach(function (entry) {
@@ -236,60 +205,13 @@ function getGeoNodeModels() {
 
     //var res = httpGet(documentsUrl);
     httpGetAsync(documentsUrl,
-        function(responseText) {
+        function (responseText) {
             alert(responseText);
         });
-
-    //var xmlHttp = new XMLHttpRequest();
-    //xmlHttp.open("GET", documentsUrl, false); // false for synchronous request
-    ////xmlHttp.send(null);
-    ////return xmlHttp;
-
-    //xmlHttp.onreadystatechange = function () {
-    //    //if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-    //        //alert(xmlHttp.responseText);
-    //    //}
-    //    alert("hallo");
-    //}
-
-    //xmlHttp.ontimeout = alert("timeout");
-
-    //alert(res);
-
-    //var obj = JSON.parse(res);
-    //alert(obj);
-
-    //var tags = new Array();
-
-    //alert(tags);
-
-    //if (Object.prototype.toString.call(obj) === "[object Array]") {
-    //    obj.forEach(function (entry) {
-    //        var tag = entry.abstract;
-    //        console.log(tag);
-    //        tags.push(tag);
-    //    });
-    //}
-
-    //var sel = $("#geonodeModelData");
-
-    //$(sel)
-    //    .find("option")
-    //    .remove()
-    //    .end();
-
-    //$.each(tags, function (val, text) {
-    //    sel.append(
-    //        $("<option></option>").val(text).html(text)
-    //    );
-    //});
-
-    //return false;
 }
 
 function getGeoNodeModelTags() {
     //todo
-
 
     return false;
 }
@@ -305,9 +227,33 @@ function addDownloadButton() {
 $(document).ready(function () {
     //$("#btn_runScript").click(runScript);
 
+    var serviceUrl = "/Home/Messages";
+
+    function refreshTable() {
+        $("#tableDiv").load(serviceUrl, function () {
+            setTimeout(refreshTable, 500);
+        });
+    }
+
+    var $el = $("#tableDiv");
+    function anim() {
+        var sb = $el.prop("scrollHeight") - $el.innerHeight();
+        $el.animate({
+            scrollTop: sb
+        }, 1000, anim);
+    }
+    function stop() {
+        $el.stop();
+    }
+
+    anim();
+    $el.hover(stop, anim);
+
+    refreshTable();
+
     $("#btn_downloadGeonodeData").attr("href", downloadGeoNodeDocument());
 
-    $("#githubUser").val("vwmaus");
+    //$("#githubUser").val("vwmaus");
     $("#licensePath").val("");
 
     // Set change event
@@ -335,6 +281,12 @@ $(document).ready(function () {
         ReloadFormData();
     });
 
-    //ReloadFormData();
+    $("#uploadLicenceFile").change(function () {
+        var input = $("#uploadLicenceFile").prop("files");
+
+        if (input[0]) {
+            $("#uploadFile").text(input[0].name);
+        }
+    });
 });
 /////////////////////////////////////////////////////////////////////////////////////////////

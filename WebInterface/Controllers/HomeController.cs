@@ -1,7 +1,5 @@
-﻿using System;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Microsoft.AspNetCore.Hosting;
-using WebInterface.Classes;
+﻿//#define testrun
+//#define exchangeEnvironmentVariables
 
 namespace WebInterface.Controllers
 {
@@ -14,16 +12,25 @@ namespace WebInterface.Controllers
     using WebInterface.Services;
     using System.Linq;
     using Microsoft.AspNetCore.Mvc.Rendering;
-    using Microsoft.AspNetCore.Hosting.Internal;
-    using Microsoft.AspNetCore.Hosting.Server;
+    using Microsoft.AspNetCore.Hosting;
+    using System;
+    using System.Text.RegularExpressions;
+    using System.Threading;
+    using WebInterface.Classes;
+    using Docker.DotNet;
+    using Docker.DotNet.Models;
 
     public class HomeController : Controller
     {
+        public static DockerClient Client;
+
         private readonly IHostingEnvironment hostingEnvironment;
+
+        public string OutputPath { get; set; }
 
         public HomeController(IHostingEnvironment environment)
         {
-            hostingEnvironment = environment;
+            this.hostingEnvironment = environment;
         }
 
         public List<GithubRepository> GithubRepositories { get; set; }
@@ -32,30 +39,69 @@ namespace WebInterface.Controllers
         {
             var userConfig = await this.GetUserConfig(new UserConfiguration());
 
+            if (userConfig.GithubRepositories.Count == 0)
+            {
+                this.SetDefaultConfig(userConfig);
+            }
+
+            //https://github.com/Microsoft/Docker.DotNet/blob/master/README.md
+
+            if (Client != null)
+            {
+                return this.View(userConfig);
+            }
+
+            var dockerAddress = Environment.GetEnvironmentVariable("DOCKER_REMOTE_API");
+            Client = new DockerClientConfiguration(new Uri(dockerAddress))
+                .CreateClient();
+
             return this.View(userConfig);
+        }
+
+        public void SetDefaultConfig(UserConfiguration config)
+        {
+            config.GitHubUser = "ptrkrnstnr";
+            config.GithubRepositories.Add(new SelectListItem { Text = "transport-model", Value = "transport-model" });
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v1.0", Value = "v1.0" });
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v2.0", Value = "v2.0" });
+            config.GithubRepositoryVersions.Add(new SelectListItem { Text = "v3.0", Value = "v3.0" });
+        }
+
+        public ActionResult Messages()
+        {
+            return this.PartialView("Messages", GlobalData.Messages);
         }
 
         public IActionResult About()
         {
             //ViewData["Message"] = "Your application description page.";
 
-            return View();
+            return this.View();
         }
 
         public IActionResult Contact()
         {
-            return View();
+            return this.View();
         }
 
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
+            return this.View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? this.HttpContext.TraceIdentifier });
         }
 
         [HttpPost]
         public IActionResult UploadLicence(UserConfiguration config)
         {
             this.UploadFile(config);
+
+            return this.RedirectToAction("Index", config);
+            //return View("Index", config);
+        }
+
+        [HttpPost]
+        public IActionResult UploadModelData(UserConfiguration config)
+        {
+            this.UploadModelInputData(config);
 
             return this.RedirectToAction("Index", config);
             //return View("Index", config);
@@ -84,70 +130,271 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        public IActionResult RunScript(UserConfiguration config)
+        public async Task<IActionResult> RunScript(UserConfiguration config)
         {
-            // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
-            // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
-
             if (!this.ModelState.IsValid)
             {
                 return this.View("Index", config);
             }
 
+            GlobalData.Messages.Clear();
+
+            var success = await this.RunScriptAsync(config);
+
+            if (success)
+            {
+                return this.DownloadResult();
+            }
+
+            return this.RedirectToAction("Index", config);
+        }
+
+        [HttpPost]
+        public IActionResult DownloadResult()
+        {
+            var hs = new HomeControllerService();
+
+            var downloadPath = $@"./Result/result.tar";
+
+            return System.IO.File.Exists(downloadPath) ? hs.DownloadFile(downloadPath, "result.tar") : this.View("Index");
+        }
+
+        public async Task<bool> RunScriptAsync(UserConfiguration config)
+        {
+            var hs = new HomeControllerService();
+
+            // https://stackoverflow.com/questions/43387693/build-docker-in-asp-net-core-no-such-file-or-directory-error
+            // https://stackoverflow.com/questions/2849341/there-is-no-viewdata-item-of-type-ienumerableselectlistitem-that-has-the-key
+
+            // Upload License if provided
             this.UploadFile(config);
 
-            var hs = new HomeControllerService();
-            // Todo: change x64 -> parse from program version of form
-            hs.CreateGamsDockerfile(config);
-            //hs.CreateModelDockerfile(config);
+            // Upload model input data if provided
+            this.UploadModelInputData(config);
 
-            // docker compose yml
+            // Generate Dockerfile
+            var programDockerfilePath = hs.CreateGamsDockerfile(config);
+            var fullpat = Path.GetFullPath(programDockerfilePath);
 
-            // build docker image of program from dockerfile
-            const string programDockerfile = "./Output/gams-dockerfile";
-
-            var fullpath = Path.GetFullPath(programDockerfile);
-
-            var process = new Process();
-            var startInfo = new ProcessStartInfo
+            // ------- CREATE IMAGE FROM DOCKERFILE
+            try
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = "/bin/bash",
-                Arguments = $@"docker build -f {fullpath} .",
-                RedirectStandardOutput = true
-            };
+                //// https://github.com/Microsoft/Docker.DotNet/issues/197
+                var path = fullpat;
 
-            process.StartInfo = startInfo;
-            process.Start(); // no such file or directory
+                const string tarFile = "Dockerfile.tar";
 
-            Debug.WriteLine(process.StandardOutput.ReadToEnd());
+                if (!System.IO.File.Exists(tarFile))
+                {
+                    System.IO.File.Delete(tarFile);
+                }
 
-            // build docker image of model
+                hs.CreateTarGz(tarFile, path);
 
-            return this.View("Index", config);
+                Logger.Log("\n\n\n\n======== DOCKERFILE START =======================================");
+                using (var sr = new StreamReader(path))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        Logger.Log(line);
+                    }
+                }
+                Logger.Log("========= DOCKERFILE END ======================================\n\n\n\n\n");
+
+                //hs.DownloadZipDataToFolder("http://geonode_geonode_1/documents/3/download/", @"./OutputZip/data.zip");
+
+                var networks = await Client.Networks.ListNetworksAsync();
+                var network = networks.First(x => x.Name.Contains("webinterface_default")); //networks.First(x => x.Name.Contains("geonode"));
+
+                var imageName = "gams/iiasa";
+                var tag = "latest";
+
+                // https://docs.docker.com/edge/engine/reference/commandline/build/
+                // https://docs.docker.com/engine/api/v1.25/#operation/ImageList
+                var imageBuildParameters = new ImageBuildParameters()
+                {
+                    Remove = true,
+                    ForceRemove = true,
+                    Tags = new List<string> { imageName + ":" + tag },
+                    NetworkMode = network.Name,
+                    NoCache = true
+                };
+
+                var errorDetected = false;
+                using (var fs = new FileStream(tarFile, FileMode.Open))
+                {
+                    // https://stackoverflow.com/questions/33997089/how-can-i-create-a-stream-for-dockerdotnet-buildimagefromdockerfile-method
+                    var statusUpdate = await Client.Images.BuildImageFromDockerfileAsync(
+                        fs,
+                        imageBuildParameters,
+                        CancellationToken.None);
+
+                    using (var streamReader = new StreamReader(statusUpdate))
+                    {
+                        string line;
+                        while ((line = streamReader.ReadLine()) != null)
+                        {
+                            Logger.Log(line);
+                            if (line.ToLower().Contains("error"))
+                            {
+                                errorDetected = true;
+                            }
+                        }
+                    }
+
+                    fs.Dispose();
+                }
+
+                if (errorDetected)
+                {
+                    Logger.Log("!!! ERRORS DETECTED!!!\nContainer Creation Aborted!");
+                    return false;
+                }
+
+                var containerName = imageName.Replace("/", "_") + "_container";
+
+                var containers =
+                    await Client.Containers.ListContainersAsync(new ContainersListParameters
+                    {
+                        All = true,
+                    },
+                        CancellationToken.None);
+
+                var containerList = containers.ToList();
+
+                foreach (var container in containerList)
+                {
+                    foreach (var name in container.Names)
+                    {
+                        if (name.Contains(containerName))
+                        {
+                            await Client.Containers.RemoveContainerAsync(container.ID,
+                                new ContainerRemoveParameters { Force = true });
+                        }
+                    }
+                }
+
+                var containerResponse = await Client.Containers.CreateContainerAsync(new CreateContainerParameters
+                {
+                    AttachStderr = true,
+                    AttachStdin = true,
+                    AttachStdout = true,
+                    Image = imageName,
+                    Name = containerName,
+                },
+                CancellationToken.None);
+
+                var res = await Client.Containers.StartContainerAsync(containerResponse.ID, new ContainerStartParameters(),
+                    CancellationToken.None);
+
+                if (res)
+                {
+                    Logger.Log("=== Container Created and Started ===");
+
+                    var outputResponse = await Client.Containers.GetArchiveFromContainerAsync(containerResponse.ID,
+                        new GetArchiveFromContainerParameters
+                        {
+                            Path = "/output"
+                        },
+                        false,
+                        CancellationToken.None);
+
+                    using (Stream s = System.IO.File.Create("./Result/result.tar"))
+                    {
+                        outputResponse.Stream.CopyTo(s);
+                    }
+
+                    Logger.Log("output finished!");
+
+                    return true;
+                }
+
+                Logger.Log("ERROR\n=== Container Could Not Be Created! ===");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(
+                    "=================== ERROR ===========================================================================");
+                Logger.Log(ex.Message); //ex.FullMessage());
+
+                if (ex.InnerException != null)
+                {
+                    Logger.Log(ex.InnerException.Message);
+                }
+
+                Logger.Log(
+                    "=====================================================================================================");
+
+                return false;
+            }
         }
 
         public async void UploadFile(UserConfiguration config)
         {
             //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
-            if (config.File != null)
+            if (config.File == null)
             {
-                var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads");
+                return;
+            }
 
-                if (!Directory.Exists(uploads))
+            var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads/program_license");
+
+            if (!Directory.Exists(uploads))
+            {
+                Directory.CreateDirectory(uploads);
+            }
+
+            const string filename = "gamslice.txt";
+            var filePath = Path.Combine(uploads, filename);
+
+            config.LicencePath = "http://webinterface/uploads/program_license/" + filename;
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            if (config.File.Length > 0)
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    Directory.CreateDirectory(uploads);
+                    await config.File.CopyToAsync(stream);
                 }
+            }
+        }
 
-                config.FileName = "gams_licence";//config.File.FileName;
-                var filePath = Path.Combine(uploads, config.FileName);
+        public async void UploadModelInputData(UserConfiguration config)
+        {
+            //https://stackoverflow.com/questions/35379309/how-to-upload-files-in-asp-net-core
+            if (config.ModelDataFile == null)
+            {
+                return;
+            }
 
-                if (config.File.Length > 0)
+            var uploads = Path.Combine(this.hostingEnvironment.WebRootPath, "uploads/model_input_data");
+
+            if (!Directory.Exists(uploads))
+            {
+                Directory.CreateDirectory(uploads);
+            }
+
+            const string filename = "modelInputData.zip"; //"licence";//config.File.FileName;
+            var filePath = Path.Combine(uploads, filename);
+
+            config.ModelInputDataFile = "http://webinterface/uploads/model_input_data/" + filename;
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            if (config.ModelDataFile.Length > 0)
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await config.File.CopyToAsync(stream);
-                    }
+                    await config.ModelDataFile.CopyToAsync(stream);
                 }
             }
         }
@@ -156,7 +403,7 @@ namespace WebInterface.Controllers
         {
             // https://docs.docker.com/engine/reference/builder/
 
-            HomeControllerService hs = new HomeControllerService();
+            var hs = new HomeControllerService();
 
             hs.CreateGamsDockerfile(config);
 
@@ -168,7 +415,7 @@ namespace WebInterface.Controllers
 
             imageName = imageName.ToLower() + Guid.NewGuid().ToString().Substring(0, 4);
 
-            var outputPath = Path.GetFullPath("./Output/");
+            var outputPath = Path.GetFullPath(HomeControllerService.OutputFilePath); //"./Output/");
 
             var files = Directory.GetFiles(outputPath);
 
@@ -181,17 +428,18 @@ namespace WebInterface.Controllers
                 {
                     //WindowStyle = ProcessWindowStyle.Hidden,
                     FileName = "/bin/bash",
-                    Arguments = $@"docker build -t webinterface/{imageName} - < /app/Output/{dockerfile}",
+                    Arguments =
+                        $@"docker build -t webinterface/{imageName} - < /app/Output/{
+                                HomeControllerService.OutputFolderName
+                            }/{dockerfile}",
                     //Arguments = $@"docker build -t test/{imageName} Dockerfile-model",
                     RedirectStandardOutput = true
                 };
-                
+
                 process.StartInfo = startInfo;
                 process.Start(); // no such file or directory
 
-                //process.OutputDataReceived += this.Process_OutputDataReceived;
-
-                Debug.WriteLine(process.StandardOutput.ReadToEnd());
+                Logger.Log(process.StandardOutput.ReadToEnd());
 
                 process.WaitForExit();
             }
@@ -201,15 +449,8 @@ namespace WebInterface.Controllers
             // Todo: Get user info: dockerfile not available
         }
 
-        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-
-            var output = e.Data;
-
-            Debug.WriteLine(output);
-        }
-
-        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig, string programRepo = "gams-docker")
+        public async Task<UserConfiguration> GetUserConfig(UserConfiguration userConfig,
+            string programRepo = "gams-docker")
         {
             if (userConfig == null)
             {
@@ -217,36 +458,6 @@ namespace WebInterface.Controllers
             }
 
             var homeControllerService = new HomeControllerService();
-
-            if (userConfig.GeoNodeDocuments.Count == 0)
-            {
-                var geoNodeDocuments = await homeControllerService.GetGeonodeData();
-                if (geoNodeDocuments != null)
-                {
-                    userConfig.GeoNodeDocuments = geoNodeDocuments.Documents.Select(document => new SelectListItem
-                    {
-                        Value = document.Id.ToString(),
-                        Text = document.Title
-                    })
-                        .ToList();
-                }
-
-                if (string.IsNullOrEmpty(userConfig.SelectedGeoNodeDocument))
-                {
-                    userConfig.SelectedGeoNodeDocument = geoNodeDocuments?.Documents.First().Title;
-                }
-
-                var geoNodeDocumentData = await homeControllerService.GetGeoNodeDocumentData(userConfig.SelectedGeoNodeDocument);
-                if (geoNodeDocumentData != null)
-                {
-                    userConfig.GeonodeModelTags = geoNodeDocumentData.Keywords.Select(keyword => new SelectListItem
-                        {
-                            Value = keyword.ToString(),
-                            Text = keyword.ToString()
-                        }
-                    ).ToList();
-                }
-            }
 
             // https://stackoverflow.com/questions/28781345/listing-all-repositories-using-github-c-sharp
             var repositories = await homeControllerService.GetGithubRepositories(userConfig.GitHubUser);
@@ -275,10 +486,10 @@ namespace WebInterface.Controllers
                 if (repositoryBranches != null)
                 {
                     userConfig.GithubRepositoryBranches = repositoryBranches.Select(branch => new SelectListItem
-                        {
-                            Value = branch.Name, //+ " " + "GithubBranch",
-                            Text = branch.Name,
-                        })
+                    {
+                        Value = branch.Name,
+                        Text = branch.Name,
+                    })
                         .ToList();
                 }
 
@@ -287,10 +498,10 @@ namespace WebInterface.Controllers
                     userConfig.GithubRepositoryVersions.Clear();
                     userConfig.GithubRepositoryVersions.AddRange(userConfig.GithubRepositoryBranches);
                     userConfig.GithubRepositoryVersions.AddRange(repositoryVersions.Select(version => new SelectListItem
-                        {
-                            Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
-                            Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
-                        })
+                    {
+                        Value = version.Url.Substring(version.Url.LastIndexOf('/') + 1),
+                        Text = version.Url.Substring(version.Url.LastIndexOf('/') + 1)
+                    })
                         .ToList());
                 }
             }
@@ -312,12 +523,13 @@ namespace WebInterface.Controllers
                 return userConfig;
             }
 
-            userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version => new SelectListItem
-            {
-                Value = version.Name,
-                Text = version.Name + " [" + version.Images.First().Architecture + "]"
-            })
-            .ToList();
+            userConfig.ProgramVersions = programVersions.Results.OrderByDescending(x => x.Name).Select(version =>
+                    new SelectListItem
+                    {
+                        Value = version.Name,
+                        Text = version.Name + " [" + version.Images.First().Architecture + "]"
+                    })
+                .ToList();
 
             return userConfig;
         }

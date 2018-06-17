@@ -1,0 +1,13 @@
+﻿@using WebInterface.Classes
+@* The Partial View Messages
+    Used for the AJAX Call !!!!!!!!!!!!!!
+    Add addtional hidden fields if other information should be updated in an interval
+*@
+
+@model List<MessageModel>
+<table id="messagesTable">
+    @foreach (var item in Model)
+    {
+        <tr><td>@item.Message</td></tr>
+    }
+</table>
